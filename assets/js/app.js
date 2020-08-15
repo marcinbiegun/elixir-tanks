@@ -20,5 +20,15 @@ const channel = socket.channel(`game:${gameId}`);
 channel.join().receive("ok", (responsePayload) => {
   console.log(responsePayload, "response from channel join");
 });
+channel.on("tick", (msg) => {
+  console.log(msg);
+});
 
 import "./game";
+
+// Sending input to server
+//
+// channel.push("new_msg", {body: e.target.val}, 10000)
+// .receive("ok", (msg) => console.log("created message", msg) )
+// .receive("error", (reasons) => console.log("create failed", reasons) )
+// .receive("timeout", () => console.log("Networking issue...") )
