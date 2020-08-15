@@ -20,3 +20,5 @@ const channel = socket.channel(`game:${gameId}`);
 channel.join().receive("ok", (responsePayload) => {
   console.log(responsePayload, "response from channel join");
 });
+
+import "./game";
