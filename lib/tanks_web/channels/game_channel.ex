@@ -5,8 +5,8 @@ defmodule TanksWeb.GameChannel do
     {game_id, ""} = Integer.parse(game_id_str)
 
     # Assign data to channel
-    new_game = %{id: game_id}
-    socket = assign(socket, :game, new_game)
+    game = %{id: game_id}
+    socket = assign(socket, :current_game, game)
 
     # Start game server
     response =
@@ -25,9 +25,15 @@ defmodule TanksWeb.GameChannel do
     {:ok, response, socket}
   end
 
-  def handle_in("input", data, socket) do
-    # broadcast!(socket, "new_msg", %{body: body})
-    IO.inspect(data)
+  def handle_in(
+        "input",
+        %{"left" => left, "right" => right, "up" => up, "down" => down} = _data,
+        socket
+      ) do
+    game_id = socket.assigns.current_game.id
+    input = %{left: left, right: right, up: up, down: down}
+    TanksGame.Server.send_input(game_id, input)
+
     {:noreply, socket}
   end
 end

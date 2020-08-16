@@ -1,4 +1,4 @@
-import socket from "./socket";
+import { isEqual } from "lodash";
 
 const gameId = 123;
 
@@ -63,7 +63,12 @@ document.addEventListener("keyup", function (event) {
 });
 
 const updateInput = (update) => {
-  document.input = Object.assign(document.input, update);
+  const newInput = Object.assign(Object.assign({}, document.input), update);
+  if (isEqual(document.input, newInput)) {
+    return;
+  }
+  document.lastInput = document.input;
+  document.input = newInput;
   document.channel.push("input", document.input, 10000);
 };
 
