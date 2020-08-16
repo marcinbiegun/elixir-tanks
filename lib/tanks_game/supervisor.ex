@@ -1,25 +1,19 @@
 defmodule TanksGame.Supervisor do
-  use Supervisor
+  use DynamicSupervisor
 
-  def start_link(args) do
-    Supervisor.start_link(__MODULE__, args, name: __MODULE__)
+  def start_link(_arg) do
+    DynamicSupervisor.start_link(__MODULE__, [], name: __MODULE__)
   end
 
-  def init(_args) do
-    children = [
-      %{
-        id: TanksGame.Server,
-        start: {TanksGame.Server, :start_link, [{:hello}]}
-      }
-      # , %{
-      #   id: TanksGamae.PlayersDynamicSupervisor,
-      #   start: {TanksGame.PlayersDynamicSupervisor, :start_link, []}
-      # }
-    ]
+  def init(_arg) do
+    DynamicSupervisor.init(strategy: :one_for_one)
+  end
 
-    opts = [strategy: :one_for_all, max_restarts: 3, max_seconds: 3]
-
-    Supervisor.init(children, opts)
+  def start_game(game_id) do
+    DynamicSupervisor.start_child(
+      __MODULE__,
+      %{id: game_id, start: {TanksGame.Server, :start_link, [game_id]}, restart: :transient}
+    )
   end
 
   def kill_children do

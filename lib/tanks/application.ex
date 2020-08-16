@@ -7,6 +7,7 @@ defmodule Tanks.Application do
 
   def start(_type, _args) do
     children = [
+      ## Phoenix processes
       # Start the Ecto repository
       Tanks.Repo,
       # Start the Telemetry supervisor
@@ -15,9 +16,10 @@ defmodule Tanks.Application do
       {Phoenix.PubSub, name: Tanks.PubSub},
       # Start the Endpoint (http/https)
       TanksWeb.Endpoint,
-      # Start a worker by calling: Tanks.Worker.start_link(arg)
-      # {Tanks.Worker, arg}
-      {TanksGame.Supervisor, %{}}
+      #
+      ## Our processes
+      {TanksGame.Supervisor, []},
+      {Registry, [keys: :unique, name: :servers_registry]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
