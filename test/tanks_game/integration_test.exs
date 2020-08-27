@@ -1,6 +1,16 @@
 defmodule TanksGame.IntegrationTest do
   use ExUnit.Case
 
+  describe "entity registry" do
+    test "getting entity by ID" do
+      player = TanksGame.Entity.Player.new()
+      fetched_player = ECS.Registry.Entity.get(TanksGame.Entity.Player, player.id)
+
+      assert fetched_player.id == player.id
+      assert fetched_player.components == player.components
+    end
+  end
+
   describe "entities" do
     test "creating and reloading entities" do
       player = TanksGame.Entity.Player.new()

@@ -8,7 +8,8 @@ defmodule ECS.Entity do
         components: components
       })
 
-    ECS.Registry.ComponentTuple.register_entity(entity)
+    ECS.Registry.ComponentTuple.put_entity(entity)
+    ECS.Registry.Entity.put(entity)
 
     entity
   end

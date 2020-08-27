@@ -17,8 +17,8 @@ defmodule TanksWeb.GameChannel do
         {:error, {:already_started, _pid}} ->
           %{id: game_id, msg: "Joined existing game"}
 
-        _ ->
-          %{error: "error"}
+        error ->
+          %{error: "Unable to start game server"}
       end
 
     # Respond

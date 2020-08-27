@@ -16,11 +16,12 @@ import "phoenix_html";
 import socket from "./socket";
 
 const gameId = 123;
-const channel = socket.channel(`game:${gameId}`);
+const channelId = `game:${gameId}`;
+const channel = socket.channel(channelId);
 document.channel = channel;
 
 channel.join().receive("ok", (responsePayload) => {
-  console.log(responsePayload, "response from channel join");
+  console.log(responsePayload, `ok response on channel join ${channelId}`);
 });
 channel.on("tick", (state) => {
   document.state = state;

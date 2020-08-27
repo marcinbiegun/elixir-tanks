@@ -33,29 +33,21 @@ defmodule ECS.Registry.ComponentTuple do
     end)
   end
 
-  def register_entity(%{components: components} = _entity) do
+  def put_entity(%{components: components} = _entity) do
     registered_ids()
     |> Enum.each(fn registry_id ->
       component_types = unbuild_registry_id(registry_id)
 
-      # |> IO.inspect(label: "component_types")
-
       matching_components = select_matching_components(component_types, components)
-
-      # |> IO.inspect(label: "matching_components")
 
       matching_components_types =
         matching_components
         |> Enum.map(& &1.__struct__)
 
-      # |> IO.inspect(label: "matching_component_types")
-
       if component_types == matching_components_types do
-        # IO.puts("YES registering entity for #{registry_id}")
         put(registry_id, Enum.map(matching_components, & &1.pid) |> List.to_tuple())
       else
         nil
-        # IO.puts("NOT registering entity for #{registry_id}")
       end
     end)
   end

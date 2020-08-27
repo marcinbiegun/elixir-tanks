@@ -6,8 +6,6 @@ defmodule Tanks.Application do
   use Application
 
   def start(_type, _args) do
-    IO.puts("Tanks.Application.start")
-
     children = [
       ## Phoenix processes
       # Start the Ecto repository

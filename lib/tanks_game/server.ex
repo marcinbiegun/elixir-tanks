@@ -7,14 +7,7 @@ defmodule TanksGame.Server do
 
   @initial_state %{
     id: nil,
-    x: 0,
-    y: 0,
-    input: %{
-      left: false,
-      right: false,
-      up: false,
-      down: false
-    }
+    player_id: nil
   }
 
   # API
@@ -46,15 +39,23 @@ defmodule TanksGame.Server do
 
     Process.send_after(self(), :tick, @tickms)
 
-    {:ok, %{@initial_state | id: id}}
+    player = TanksGame.Entity.Player.new()
+
+    {:ok, %{@initial_state | id: id, player_id: player.id}}
   end
 
   def handle_info(:tick, state) do
+    start_ns = System.os_time(:nanosecond)
+
     new_state = do_tick(state)
+    client_state = state_for_client(new_state)
 
-    TanksWeb.Endpoint.broadcast!("game:#{state.id}", "tick", state_for_client(new_state))
+    TanksWeb.Endpoint.broadcast!("game:#{state.id}", "tick", client_state)
 
-    Process.send_after(self(), :tick, @tickms)
+    took_ns = System.os_time(:nanosecond) - start_ns
+    took_ms = Float.round(took_ns / 1_000_000, 2)
+
+    Process.send_after(self(), :tick, @tickms - round(took_ms))
     {:noreply, new_state}
   end
 
@@ -63,8 +64,12 @@ defmodule TanksGame.Server do
   end
 
   def handle_cast({:update_input, input}, state) do
-    new_state = %{state | input: input}
-    {:noreply, new_state}
+    player = ECS.Registry.Entity.get(TanksGame.Entity.Player, state.player_id)
+
+    player.components.control.pid
+    |> ECS.Component.update(input)
+
+    {:noreply, state}
   end
 
   def handle_cast(:raise, state) do
@@ -80,38 +85,14 @@ defmodule TanksGame.Server do
     do: {:via, Registry, {@registry, name}}
 
   defp do_tick(state) do
-    state =
-      if state.input.left do
-        %{state | x: state.x - 5}
-      else
-        state
-      end
-
-    state =
-      if state.input.right do
-        %{state | x: state.x + 5}
-      else
-        state
-      end
-
-    state =
-      if state.input.up do
-        %{state | y: state.y - 5}
-      else
-        state
-      end
-
-    state =
-      if state.input.down do
-        %{state | y: state.y + 5}
-      else
-        state
-      end
-
+    TanksGame.System.Movement.process()
     state
   end
 
   defp state_for_client(state) do
-    %{x: state.x, y: state.y}
+    player = ECS.Registry.Entity.get(TanksGame.Entity.Player, state.player_id)
+    x = player.components.position.state.x
+    y = player.components.position.state.y
+    %{x: x, y: y}
   end
 end
