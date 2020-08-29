@@ -18,10 +18,10 @@ defmodule TanksGame.Entity.Projectile do
 
   @size 0.5
 
-  def new() do
-    position = TanksGame.Components.Position.new(%{x: 0, y: 0})
+  def new(x, y, vel_x, vel_y) do
+    position = TanksGame.Components.Position.new(%{x: x, y: y})
     size = TanksGame.Components.Size.new(%{size: @size})
-    velocity = TanksGame.Components.Velocity.new(%{x: 0, y: 0})
+    velocity = TanksGame.Components.Velocity.new(%{x: vel_x, y: vel_y})
 
     components = %{
       position: position,

@@ -36,4 +36,15 @@ defmodule TanksWeb.GameChannel do
 
     {:noreply, socket}
   end
+
+  def handle_in(
+        "action",
+        %{"type" => "fire", "x" => x, "y" => y} = _data,
+        socket
+      ) do
+    game_id = socket.assigns.current_game.id
+    TanksGame.Server.send_action(game_id, :fire, {x, y})
+
+    {:noreply, socket}
+  end
 end

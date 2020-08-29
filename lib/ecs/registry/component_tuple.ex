@@ -1,5 +1,14 @@
 defmodule ECS.Registry.ComponentTuple do
   @tuple_id_separator ":"
+  @initial_state %{}
+
+  def start() do
+    Agent.start_link(fn -> @initial_state end, name: __MODULE__)
+  end
+
+  def clear do
+    Agent.update(__MODULE__, fn _state -> @initial_state end)
+  end
 
   def register_system(system_module) do
     system_module.component_types()
@@ -64,10 +73,6 @@ defmodule ECS.Registry.ComponentTuple do
       component.__struct__ in component_types
     end)
     |> Enum.map(fn {_key, component} -> component end)
-  end
-
-  def start() do
-    Agent.start_link(fn -> %{} end, name: __MODULE__)
   end
 
   def put(registry_id, component_pids_tuple)

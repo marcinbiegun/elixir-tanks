@@ -1,6 +1,12 @@
 defmodule ECS.Registry.Id do
+  @initial_state 0
+
   def start do
-    Agent.start_link(fn -> 0 end, name: __MODULE__)
+    Agent.start_link(fn -> @initial_state end, name: __MODULE__)
+  end
+
+  def clear do
+    Agent.update(__MODULE__, fn _state -> @initial_state end)
   end
 
   def generate_id() do

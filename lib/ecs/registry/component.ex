@@ -1,7 +1,12 @@
 defmodule ECS.Registry.Component do
+  @initial_state %{}
+
   def start do
-    initial_state = %{}
-    Agent.start_link(fn -> initial_state end, name: __MODULE__)
+    Agent.start_link(fn -> @initial_state end, name: __MODULE__)
+  end
+
+  def clear do
+    Agent.update(__MODULE__, fn _state -> @initial_state end)
   end
 
   def put(component_type, component_pid) do

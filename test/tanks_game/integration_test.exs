@@ -8,6 +8,8 @@ defmodule TanksGame.IntegrationTest do
 
       assert fetched_player.id == player.id
       assert fetched_player.components == player.components
+
+      TanksGame.reset()
     end
   end
 
@@ -22,14 +24,44 @@ defmodule TanksGame.IntegrationTest do
 
       assert player.__struct__ == TanksGame.Entity.Player
       assert player.components.position.__struct__ == TanksGame.Components.Position
-    end
-  end
 
-  describe "registering entities" do
+      TanksGame.reset()
+    end
+
+    test "getting list of all entites of a given type" do
+      projectile1 = TanksGame.Entity.Projectile.new(0, 0, 1, 0)
+      projectile2 = TanksGame.Entity.Projectile.new(10, 10, 0, 1)
+
+      [fetched_projectile1, fetched_projectile2] =
+        ECS.Registry.Entity.get(TanksGame.Entity.Projectile)
+        |> Enum.sort_by(& &1.id)
+
+      assert projectile1 == fetched_projectile1
+      assert projectile2 == fetched_projectile2
+
+      TanksGame.reset()
+    end
   end
 
   describe "velocity system" do
     test "projectile movement" do
+      projectile = TanksGame.Entity.Projectile.new(0, 0, 1, 2)
+      assert projectile.components.position.state.x == 0
+      assert projectile.components.position.state.y == 0
+
+      TanksGame.System.Velocity.process()
+
+      projectile = ECS.Entity.reload(projectile)
+      assert projectile.components.position.state.x == 1
+      assert projectile.components.position.state.y == 2
+
+      TanksGame.System.Velocity.process()
+
+      projectile = ECS.Entity.reload(projectile)
+      assert projectile.components.position.state.x == 2
+      assert projectile.components.position.state.y == 4
+
+      TanksGame.reset()
     end
   end
 
@@ -51,6 +83,8 @@ defmodule TanksGame.IntegrationTest do
 
       player = ECS.Entity.reload(player)
       assert player.components.position.state.x == 5
+
+      TanksGame.reset()
     end
   end
 end

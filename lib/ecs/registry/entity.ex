@@ -1,7 +1,12 @@
 defmodule ECS.Registry.Entity do
+  @initial_state %{}
+
   def start do
-    initial_state = %{}
-    Agent.start_link(fn -> initial_state end, name: __MODULE__)
+    Agent.start_link(fn -> @initial_state end, name: __MODULE__)
+  end
+
+  def clear do
+    Agent.update(__MODULE__, fn _state -> @initial_state end)
   end
 
   def put(%type{id: id} = entity) do
@@ -17,6 +22,9 @@ defmodule ECS.Registry.Entity do
   def get(type) do
     Agent.get(__MODULE__, fn state ->
       Map.get(state, type, %{})
+      |> Enum.map(fn {id, packed} ->
+        unpack(packed, type, id)
+      end)
     end)
   end
 

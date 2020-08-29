@@ -32,6 +32,10 @@ defmodule TanksGame.Server do
     GenServer.cast(via_tuple(id), {:update_input, input})
   end
 
+  def send_action(id, :fire, {x, y}) do
+    GenServer.cast(via_tuple(id), {:action, :fire, {x, y}})
+  end
+
   # Callbacks
 
   def init(id) do
@@ -72,6 +76,14 @@ defmodule TanksGame.Server do
     {:noreply, state}
   end
 
+  def handle_cast({:action, :fire, {velocity_x, velocity_y}}, state) do
+    player = ECS.Registry.Entity.get(TanksGame.Entity.Player, state.player_id)
+    %{x: player_x, y: player_y} = player.components.position.state
+    _new_projectile = TanksGame.Entity.Projectile.new(player_x, player_y, velocity_x, velocity_y)
+
+    {:noreply, state}
+  end
+
   def handle_cast(:raise, state) do
     raise RuntimeError, message: "Error, #{__MODULE__} #{state.id} has crashed"
   end
@@ -86,13 +98,26 @@ defmodule TanksGame.Server do
 
   defp do_tick(state) do
     TanksGame.System.Movement.process()
+    TanksGame.System.Velocity.process()
     state
   end
 
   defp state_for_client(state) do
     player = ECS.Registry.Entity.get(TanksGame.Entity.Player, state.player_id)
-    x = player.components.position.state.x
-    y = player.components.position.state.y
-    %{x: x, y: y}
+    %{x: player_x, y: player_y} = player.components.position.state
+
+    projectiles_map =
+      ECS.Registry.Entity.get(TanksGame.Entity.Projectile)
+      |> Enum.map(fn projectile ->
+        projectile_data = %{
+          x: projectile.components.position.state.x,
+          y: projectile.components.position.state.y
+        }
+
+        {projectile.id, projectile_data}
+      end)
+      |> Map.new()
+
+    %{x: player_x, y: player_y, projectiles: projectiles_map}
   end
 end

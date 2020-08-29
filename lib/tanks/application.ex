@@ -22,7 +22,7 @@ defmodule Tanks.Application do
       {Registry, [keys: :unique, name: :servers_registry]}
     ]
 
-    init_ecs()
+    TanksGame.start()
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
@@ -35,23 +35,5 @@ defmodule Tanks.Application do
   def config_change(changed, _new, removed) do
     TanksWeb.Endpoint.config_change(changed, removed)
     :ok
-  end
-
-  defp init_ecs() do
-    # Initialize registries
-    ECS.Registry.Component.start()
-    ECS.Registry.Entity.start()
-    ECS.Registry.Id.start()
-    ECS.Registry.ComponentTuple.start()
-
-    # Initialize systems
-
-    TanksGame.System.Velocity.component_types()
-    |> ECS.Registry.ComponentTuple.build_registry_id()
-    |> ECS.Registry.ComponentTuple.init_register_type()
-
-    TanksGame.System.Movement.component_types()
-    |> ECS.Registry.ComponentTuple.build_registry_id()
-    |> ECS.Registry.ComponentTuple.init_register_type()
   end
 end
