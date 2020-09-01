@@ -38,4 +38,10 @@ defmodule ECS.Component do
     ECS.Component.Agent.set(pid, new_state)
     %{pid: pid, state: new_state}
   end
+
+  def destroy(component_type, pid) do
+    ECS.Registry.Component.remove(component_type, pid)
+    ECS.Component.Agent.stop(pid)
+    :ok
+  end
 end

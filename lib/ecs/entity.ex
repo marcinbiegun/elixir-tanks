@@ -23,4 +23,15 @@ defmodule ECS.Entity do
 
     %{entity | components: updated_components}
   end
+
+  def destroy(%entity_type{components: components, id: id} = entity) do
+    Enum.map(components, fn {_key, %component_type{pid: pid} = _component} ->
+      ECS.Component.destroy(component_type, pid)
+    end)
+
+    ECS.Registry.ComponentTuple.remove_entity(entity)
+    ECS.Registry.Entity.remove(entity_type, id)
+
+    :ok
+  end
 end

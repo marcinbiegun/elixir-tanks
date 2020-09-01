@@ -42,7 +42,7 @@ defmodule ECS.Registry.ComponentTuple do
     end)
   end
 
-  def put_entity(%{components: components} = _entity) do
+  def put_entity(%entity_type{components: components, id: id} = _entity) do
     registered_ids()
     |> Enum.each(fn registry_id ->
       component_types = unbuild_registry_id(registry_id)
@@ -54,10 +54,22 @@ defmodule ECS.Registry.ComponentTuple do
         |> Enum.map(& &1.__struct__)
 
       if component_types == matching_components_types do
-        put(registry_id, Enum.map(matching_components, & &1.pid) |> List.to_tuple())
+        put(
+          registry_id,
+          entity_type,
+          id,
+          Enum.map(matching_components, & &1.pid) |> List.to_tuple()
+        )
       else
         nil
       end
+    end)
+  end
+
+  def remove_entity(%_entity_type{components: _components, id: id} = _entity) do
+    registered_ids()
+    |> Enum.each(fn registry_id ->
+      remove(registry_id, id)
     end)
   end
 
@@ -75,10 +87,24 @@ defmodule ECS.Registry.ComponentTuple do
     |> Enum.map(fn {_key, component} -> component end)
   end
 
-  def put(registry_id, component_pids_tuple)
-      when is_atom(registry_id) and is_tuple(component_pids_tuple) do
+  def put(registry_id, entity_type, entity_id, component_pids_tuple)
+      when is_atom(registry_id) and is_integer(entity_id) and is_tuple(component_pids_tuple) do
     Agent.update(__MODULE__, fn state ->
-      new_list = Map.get(state, registry_id, []) ++ [component_pids_tuple]
+      new_list =
+        Map.get(state, registry_id, []) ++ [{entity_type, entity_id, component_pids_tuple}]
+
+      Map.put(state, registry_id, new_list)
+    end)
+  end
+
+  def remove(registry_id, entity_id) do
+    Agent.update(__MODULE__, fn state ->
+      new_list =
+        Map.get(state, registry_id, [])
+        |> Enum.filter(fn {_entity_type, stored_entity_id, _component_pids_tuple} ->
+          stored_entity_id != entity_id
+        end)
+
       Map.put(state, registry_id, new_list)
     end)
   end

@@ -18,4 +18,8 @@ defmodule ECS.Component.Agent do
   def set(pid, key, value) do
     Agent.update(pid, &Map.put(&1, key, value))
   end
+
+  def stop(pid) do
+    Agent.stop(pid)
+  end
 end

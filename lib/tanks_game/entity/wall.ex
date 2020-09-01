@@ -1,18 +1,14 @@
-defmodule TanksGame.Entity.Projectile do
+defmodule TanksGame.Entity.Wall do
   alias TanksGame.Components.{
-    Lifetime,
     Position,
-    Size,
-    Velocity
+    Size
   }
 
   @type t :: %__MODULE__{
           id: Integer.t(),
           components: %{
-            lifetime: Lifetime.t(),
             position: Position.t(),
-            size: Size.t(),
-            velocity: Velocity.t()
+            size: Size.t()
           }
         }
 
@@ -20,17 +16,13 @@ defmodule TanksGame.Entity.Projectile do
 
   @size 0.5
 
-  def new(x, y, vel_x, vel_y, lifetime \\ 10_000) do
-    lifetime = TanksGame.Components.Lifetime.new(lifetime)
+  def new(x, y) do
     position = TanksGame.Components.Position.new(%{x: x, y: y})
     size = TanksGame.Components.Size.new(%{size: @size})
-    velocity = TanksGame.Components.Velocity.new(%{x: vel_x, y: vel_y})
 
     components = %{
-      lifetime: lifetime,
       position: position,
-      size: size,
-      velocity: velocity
+      size: size
     }
 
     ECS.Entity.new(__MODULE__, components)

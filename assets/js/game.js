@@ -6,11 +6,14 @@ const addPlayerBunny = (app) => {
   const texture = PIXI.Texture.from("images/bunny.png");
 
   const bunny = new PIXI.Sprite(texture);
-  app.stage.addChild(bunny);
 
   // Center bunny sprite in local bunny coordinates
-  bunny.pivot.x = bunny.width / 2;
-  bunny.pivot.y = bunny.height / 2;
+  bunny.pivot.x = 12;
+  bunny.pivot.y = 20;
+  // bunny.pivot.x = Math.round(bunny.width / 2);
+  // bunny.pivot.y = Math.round(bunny.height / 2);
+
+  app.stage.addChild(bunny);
 
   // Move container to the center
   // bunny.x = app.screen.width / 2;
@@ -75,9 +78,42 @@ const updateProjectiles = (data) => {
     }
   }
 
-  for (const [id, pixiProjectile] of Object.entries(projectiles)) {
+  for (const [id, sprite] of Object.entries(projectiles)) {
     // Delete projectile
     if (data[id] == null) {
+      projectiles[id].destroy();
+      delete projectiles[id];
+    }
+  }
+};
+
+// Draw walls
+let walls = {};
+const updateWalls = (data) => {
+  for (const [id, wall] of Object.entries(data)) {
+    // Update
+    if (walls[id] != null) {
+      walls[id].x = wall.x;
+      walls[id].y = wall.y;
+      // Create
+    } else {
+      console.log("Creating wall");
+      const texture = PIXI.Texture.from("images/wall_16.png");
+      const sprite = new PIXI.Sprite(texture);
+      sprite.pivot.x = sprite.width / 2;
+      sprite.pivot.y = sprite.height / 2;
+      app.stage.addChild(sprite);
+      walls[id] = sprite;
+      walls[id].x = wall.x;
+      walls[id].y = wall.y;
+    }
+  }
+
+  for (const [id, sprite] of Object.entries(walls)) {
+    // Delete
+    if (data[id] == null) {
+      walls[id].destroy();
+      delete walls[id];
     }
   }
 };
@@ -91,4 +127,5 @@ app.ticker.add((delta) => {
   bunny.y = document.state.y;
 
   updateProjectiles(document.state.projectiles);
+  updateWalls(document.state.walls);
 });

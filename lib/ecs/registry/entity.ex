@@ -40,6 +40,13 @@ defmodule ECS.Registry.Entity do
     end)
   end
 
+  def remove(type, id) do
+    Agent.update(__MODULE__, fn state ->
+      {_removed, new_map} = Map.get(state, type, %{}) |> Map.pop(id)
+      Map.put(state, type, new_map)
+    end)
+  end
+
   def pack(%{components: components} = _entity) do
     components
     |> Enum.map(fn {key, %type{pid: pid}} ->

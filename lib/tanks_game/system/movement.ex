@@ -10,7 +10,7 @@ defmodule TanksGame.System.Movement do
     |> Enum.each(fn tuple -> dispatch(tuple, :move) end)
   end
 
-  defp dispatch({control_pid, position_pid}, :move) do
+  defp dispatch({_entity_type, _entity_id, {control_pid, position_pid}}, :move) do
     position = ECS.Component.get_state(position_pid)
 
     %{down: down, left: left, right: right, up: up, speed: speed} =

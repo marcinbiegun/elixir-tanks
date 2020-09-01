@@ -87,4 +87,32 @@ defmodule TanksGame.IntegrationTest do
       TanksGame.reset()
     end
   end
+
+  describe "lifetime system" do
+    test "test dying" do
+      lifetime = 50
+      projectile = TanksGame.Entity.Projectile.new(0, 0, 0, 0, lifetime)
+      projectile_id = projectile.id
+
+      TanksGame.System.LifetimeDying.process()
+
+      assert [] = ECS.Queue.get(:internal)
+
+      Process.sleep(lifetime)
+
+      TanksGame.System.LifetimeDying.process()
+
+      assert [
+               %TanksGame.Event.Destroy{
+                 entity_id: ^projectile_id,
+                 entity_module: TanksGame.Entity.Projectile
+               }
+             ] = ECS.Queue.get(:internal)
+
+      TanksGame.reset()
+    end
+  end
+
+  describe "collision system" do
+  end
 end

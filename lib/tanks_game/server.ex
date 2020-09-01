@@ -10,6 +10,8 @@ defmodule TanksGame.Server do
     player_id: nil
   }
 
+  @projectile_speed 5.0
+
   # API
 
   def start_link(id) do
@@ -45,6 +47,14 @@ defmodule TanksGame.Server do
 
     player = TanksGame.Entity.Player.new()
 
+    TanksGame.Entity.Wall.new(100, 100)
+    TanksGame.Entity.Wall.new(100, 150)
+    TanksGame.Entity.Wall.new(100, 200)
+
+    TanksGame.Entity.Wall.new(500, 100)
+    TanksGame.Entity.Wall.new(500, 150)
+    TanksGame.Entity.Wall.new(500, 200)
+
     {:ok, %{@initial_state | id: id, player_id: player.id}}
   end
 
@@ -59,6 +69,8 @@ defmodule TanksGame.Server do
     took_ns = System.os_time(:nanosecond) - start_ns
     took_ms = Float.round(took_ns / 1_000_000, 2)
 
+    # Logger.debug("Tick took #{round(took_ns / 1000)} μs")
+
     Process.send_after(self(), :tick, @tickms - round(took_ms))
     {:noreply, new_state}
   end
@@ -68,10 +80,8 @@ defmodule TanksGame.Server do
   end
 
   def handle_cast({:update_input, input}, state) do
-    player = ECS.Registry.Entity.get(TanksGame.Entity.Player, state.player_id)
-
-    player.components.control.pid
-    |> ECS.Component.update(input)
+    event = TanksGame.Event.Control.new(TanksGame.Entity.Player, state.player_id, input)
+    ECS.Queue.put(:input, event)
 
     {:noreply, state}
   end
@@ -79,7 +89,14 @@ defmodule TanksGame.Server do
   def handle_cast({:action, :fire, {velocity_x, velocity_y}}, state) do
     player = ECS.Registry.Entity.get(TanksGame.Entity.Player, state.player_id)
     %{x: player_x, y: player_y} = player.components.position.state
-    _new_projectile = TanksGame.Entity.Projectile.new(player_x, player_y, velocity_x, velocity_y)
+
+    TanksGame.Entity.Projectile.new(
+      player_x,
+      player_y,
+      velocity_x * @projectile_speed,
+      velocity_y * @projectile_speed,
+      2000
+    )
 
     {:noreply, state}
   end
@@ -97,8 +114,12 @@ defmodule TanksGame.Server do
     do: {:via, Registry, {@registry, name}}
 
   defp do_tick(state) do
+    process_input_events()
+    TanksGame.System.LifetimeDying.process()
     TanksGame.System.Movement.process()
     TanksGame.System.Velocity.process()
+    TanksGame.System.Collision.process()
+    process_internal_events()
     state
   end
 
@@ -106,7 +127,7 @@ defmodule TanksGame.Server do
     player = ECS.Registry.Entity.get(TanksGame.Entity.Player, state.player_id)
     %{x: player_x, y: player_y} = player.components.position.state
 
-    projectiles_map =
+    projectiles =
       ECS.Registry.Entity.get(TanksGame.Entity.Projectile)
       |> Enum.map(fn projectile ->
         projectile_data = %{
@@ -118,6 +139,34 @@ defmodule TanksGame.Server do
       end)
       |> Map.new()
 
-    %{x: player_x, y: player_y, projectiles: projectiles_map}
+    walls =
+      ECS.Registry.Entity.get(TanksGame.Entity.Wall)
+      |> Enum.map(fn wall ->
+        wall_data = %{
+          x: wall.components.position.state.x,
+          y: wall.components.position.state.y
+        }
+
+        {wall.id, wall_data}
+      end)
+      |> Map.new()
+
+    %{x: player_x, y: player_y, projectiles: projectiles, walls: walls}
+  end
+
+  def process_input_events() do
+    events = ECS.Queue.pop_all(:input) |> Enum.reverse()
+
+    Enum.map(events, fn event ->
+      TanksGame.EventProcessor.process_event(event)
+    end)
+  end
+
+  def process_internal_events() do
+    events = ECS.Queue.pop_all(:internal) |> Enum.reverse()
+
+    Enum.map(events, fn event ->
+      TanksGame.EventProcessor.process_event(event)
+    end)
   end
 end
