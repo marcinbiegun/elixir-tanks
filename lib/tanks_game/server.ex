@@ -7,10 +7,11 @@ defmodule TanksGame.Server do
 
   @initial_state %{
     id: nil,
-    player_id: nil
+    player_id: nil,
+    tick: 0
   }
 
-  @projectile_speed 5.0
+  @projectile_speed 10.0
 
   # API
 
@@ -116,14 +117,20 @@ defmodule TanksGame.Server do
   defp via_tuple(name),
     do: {:via, Registry, {@registry, name}}
 
-  defp do_tick(state) do
+  defp do_tick(%{tick: tick} = state) do
     process_input_events()
     TanksGame.System.LifetimeDying.process()
+
+    if rem(tick, 10) == 0 do
+      TanksGame.System.AI.process()
+    end
+
     TanksGame.System.Movement.process()
     TanksGame.System.Velocity.process()
     TanksGame.System.Collision.process()
     process_internal_events()
-    state
+
+    %{state | tick: tick + 1}
   end
 
   defp state_for_client(state) do

@@ -48,6 +48,10 @@ defmodule TanksGame do
     TanksGame.System.Collision.component_types()
     |> ECS.Registry.ComponentTuple.build_registry_id()
     |> ECS.Registry.ComponentTuple.init_register_type()
+
+    TanksGame.System.AI.component_types()
+    |> ECS.Registry.ComponentTuple.build_registry_id()
+    |> ECS.Registry.ComponentTuple.init_register_type()
   end
 
   def start_queues() do

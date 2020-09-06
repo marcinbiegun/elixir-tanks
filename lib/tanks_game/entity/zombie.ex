@@ -1,5 +1,6 @@
 defmodule TanksGame.Entity.Zombie do
   alias TanksGame.Components.{
+    Brain,
     Control,
     Size,
     Position
@@ -8,6 +9,7 @@ defmodule TanksGame.Entity.Zombie do
   @type t :: %__MODULE__{
           id: Integer.t(),
           components: %{
+            brain: Brain.t(),
             control: Control.t(),
             size: Size.t(),
             position: Position.t()
@@ -16,10 +18,12 @@ defmodule TanksGame.Entity.Zombie do
 
   defstruct [:id, :components]
 
-  @speed 5
-  @size 1
+  @speed 1
+  @size 20
 
   def new(x, y) do
+    brain = TanksGame.Components.Brain.new()
+
     control =
       TanksGame.Components.Control.new(%{
         down: false,
@@ -33,6 +37,7 @@ defmodule TanksGame.Entity.Zombie do
     position = TanksGame.Components.Position.new(%{x: x, y: y})
 
     components = %{
+      brain: brain,
       control: control,
       size: size,
       position: position
