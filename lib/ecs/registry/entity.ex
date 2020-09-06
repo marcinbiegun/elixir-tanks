@@ -19,7 +19,7 @@ defmodule ECS.Registry.Entity do
     end)
   end
 
-  def get(type) do
+  def all(type) do
     Agent.get(__MODULE__, fn state ->
       Map.get(state, type, %{})
       |> Enum.map(fn {id, packed} ->

@@ -18,7 +18,7 @@ defmodule TanksGame.Entity.Projectile do
 
   defstruct [:id, :components]
 
-  @size 0.5
+  @size 10
 
   def new(x, y, vel_x, vel_y, lifetime \\ 10_000) do
     lifetime = TanksGame.Components.Lifetime.new(lifetime)

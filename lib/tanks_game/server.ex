@@ -71,7 +71,7 @@ defmodule TanksGame.Server do
 
     # Logger.debug("Tick took #{round(took_ns / 1000)} μs")
 
-    Process.send_after(self(), :tick, @tickms - round(took_ms))
+    Process.send_after(self(), :tick, max(@tickms - round(took_ms), 0))
     {:noreply, new_state}
   end
 
@@ -128,30 +128,30 @@ defmodule TanksGame.Server do
     %{x: player_x, y: player_y} = player.components.position.state
 
     projectiles =
-      ECS.Registry.Entity.get(TanksGame.Entity.Projectile)
-      |> Enum.map(fn projectile ->
-        projectile_data = %{
-          x: projectile.components.position.state.x,
-          y: projectile.components.position.state.y
-        }
-
-        {projectile.id, projectile_data}
+      ECS.Registry.Entity.all(TanksGame.Entity.Projectile)
+      |> Enum.map(fn entity ->
+        %{x: x, y: y} = entity.components.position.state
+        {x, y}
       end)
       |> Map.new()
 
     walls =
-      ECS.Registry.Entity.get(TanksGame.Entity.Wall)
-      |> Enum.map(fn wall ->
-        wall_data = %{
-          x: wall.components.position.state.x,
-          y: wall.components.position.state.y
-        }
-
-        {wall.id, wall_data}
+      ECS.Registry.Entity.all(TanksGame.Entity.Wall)
+      |> Enum.map(fn entity ->
+        %{x: x, y: y} = entity.components.position.state
+        {x, y}
       end)
       |> Map.new()
 
-    %{x: player_x, y: player_y, projectiles: projectiles, walls: walls}
+    zombies =
+      ECS.Registry.Entity.all(TanksGame.Entity.Zombie)
+      |> Enum.map(fn entity ->
+        %{x: x, y: y} = entity.components.position.state
+        {x, y}
+      end)
+      |> Map.new()
+
+    %{x: player_x, y: player_y, projectiles: projectiles, walls: walls, zombies: zombies}
   end
 
   def process_input_events() do

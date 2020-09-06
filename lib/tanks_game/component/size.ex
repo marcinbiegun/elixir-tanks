@@ -2,13 +2,12 @@ defmodule TanksGame.Components.Size do
   @type t :: %__MODULE__{
           pid: pid(),
           state: %{
-            size: Integer.t()
+            radius: float()
           }
         }
 
   use ECS.Component
 
-  # defstruct [:size]
   defstruct [:pid, :state]
 
   def new(%{size: _size} = state) do

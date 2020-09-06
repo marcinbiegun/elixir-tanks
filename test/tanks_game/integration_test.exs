@@ -1,6 +1,12 @@
 defmodule TanksGame.IntegrationTest do
   use ExUnit.Case
 
+  setup do
+    on_exit(fn ->
+      TanksGame.reset()
+    end)
+  end
+
   describe "entity registry" do
     test "getting entity by ID" do
       player = TanksGame.Entity.Player.new()
@@ -8,8 +14,6 @@ defmodule TanksGame.IntegrationTest do
 
       assert fetched_player.id == player.id
       assert fetched_player.components == player.components
-
-      TanksGame.reset()
     end
   end
 
@@ -33,13 +37,11 @@ defmodule TanksGame.IntegrationTest do
       projectile2 = TanksGame.Entity.Projectile.new(10, 10, 0, 1)
 
       [fetched_projectile1, fetched_projectile2] =
-        ECS.Registry.Entity.get(TanksGame.Entity.Projectile)
+        ECS.Registry.Entity.all(TanksGame.Entity.Projectile)
         |> Enum.sort_by(& &1.id)
 
       assert projectile1 == fetched_projectile1
       assert projectile2 == fetched_projectile2
-
-      TanksGame.reset()
     end
   end
 
@@ -60,8 +62,6 @@ defmodule TanksGame.IntegrationTest do
       projectile = ECS.Entity.reload(projectile)
       assert projectile.components.position.state.x == 2
       assert projectile.components.position.state.y == 4
-
-      TanksGame.reset()
     end
   end
 
@@ -83,8 +83,6 @@ defmodule TanksGame.IntegrationTest do
 
       player = ECS.Entity.reload(player)
       assert player.components.position.state.x == 5
-
-      TanksGame.reset()
     end
   end
 
@@ -108,11 +106,43 @@ defmodule TanksGame.IntegrationTest do
                  entity_module: TanksGame.Entity.Projectile
                }
              ] = ECS.Queue.get(:internal)
-
-      TanksGame.reset()
     end
   end
 
   describe "collision system" do
+    test "projectile vs wall collision" do
+      projectile = TanksGame.Entity.Projectile.new(0, 0, 0, 0)
+      projectile_id = projectile.id
+      _wall = TanksGame.Entity.Wall.new(0, 0)
+
+      TanksGame.System.Collision.process()
+
+      assert [
+               %TanksGame.Event.Destroy{
+                 entity_id: ^projectile_id,
+                 entity_module: TanksGame.Entity.Projectile
+               }
+             ] = ECS.Queue.get(:internal)
+    end
+
+    test "projectile vs zombie projectile collision" do
+      projectile = TanksGame.Entity.Projectile.new(0, 0, 0, 0)
+      projectile_id = projectile.id
+      zombie = TanksGame.Entity.Zombie.new(0, 0)
+      zombie_id = zombie.id
+
+      TanksGame.System.Collision.process()
+
+      assert [
+               %TanksGame.Event.Destroy{
+                 entity_id: ^projectile_id,
+                 entity_module: TanksGame.Entity.Projectile
+               },
+               %TanksGame.Event.Destroy{
+                 entity_id: ^zombie_id,
+                 entity_module: TanksGame.Entity.Zombie
+               }
+             ] = ECS.Queue.get(:internal) |> Enum.sort_by(& &1.entity_module)
+    end
   end
 end

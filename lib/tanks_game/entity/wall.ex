@@ -14,7 +14,7 @@ defmodule TanksGame.Entity.Wall do
 
   defstruct [:id, :components]
 
-  @size 0.5
+  @size 30
 
   def new(x, y) do
     position = TanksGame.Components.Position.new(%{x: x, y: y})
