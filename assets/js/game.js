@@ -1,10 +1,16 @@
 import * as PIXI from "pixi.js";
 import { isObject } from "lodash";
 
-const addPlayerBunny = (app) => {
-  // Create a new texture
-  const texture = PIXI.Texture.from("images/bunny.png");
+const FILES = {
+  player: "images/bunny.png",
+  projectile: "images/projectile_blue.png",
+  wall: "images/wall_16.png",
+  zombie: "images/zombie1_hold.png",
+};
 
+const addPlayer = (app) => {
+  // Create a new texture
+  const texture = PIXI.Texture.from(FILES.player);
   const bunny = new PIXI.Sprite(texture);
 
   // Center bunny sprite in local bunny coordinates
@@ -32,7 +38,7 @@ const app = new PIXI.Application({
 document.getElementById("game").appendChild(app.view);
 
 // Add bunny
-const bunny = addPlayerBunny(app);
+const bunny = addPlayer(app);
 
 // OnClick - fire action
 const onClick = (event) => {
@@ -67,7 +73,7 @@ const updateProjectiles = (data) => {
       projectiles[id].y = projectile.y;
       // Create projectile
     } else {
-      const texture = PIXI.Texture.from("images/projectile_blue.png");
+      const texture = PIXI.Texture.from(FILES.projectile);
       const newPixiProjectile = new PIXI.Sprite(texture);
       newPixiProjectile.pivot.x = newPixiProjectile.width / 2;
       newPixiProjectile.pivot.y = newPixiProjectile.height / 2;
@@ -98,7 +104,7 @@ const updateWalls = (data) => {
       // Create
     } else {
       console.log("Creating wall");
-      const texture = PIXI.Texture.from("images/wall_16.png");
+      const texture = PIXI.Texture.from(FILES.wall);
       const sprite = new PIXI.Sprite(texture);
       sprite.pivot.x = sprite.width / 2;
       sprite.pivot.y = sprite.height / 2;
@@ -118,6 +124,37 @@ const updateWalls = (data) => {
   }
 };
 
+// Draw zombies
+let zombies = {};
+const updateZombies = (data) => {
+  for (const [id, zombie] of Object.entries(data)) {
+    // Update
+    if (zombies[id] != null) {
+      zombies[id].x = zombie.x;
+      zombies[id].y = zombie.y;
+      // Create
+    } else {
+      console.log("Creating zombie");
+      const texture = PIXI.Texture.from(FILES.zombie);
+      const sprite = new PIXI.Sprite(texture);
+      sprite.pivot.x = sprite.width / 2;
+      sprite.pivot.y = sprite.height / 2;
+      app.stage.addChild(sprite);
+      zombies[id] = sprite;
+      zombies[id].x = zombie.x;
+      zombies[id].y = zombie.y;
+    }
+  }
+
+  for (const [id, sprite] of Object.entries(zombies)) {
+    // Delete
+    if (data[id] == null) {
+      zombies[id].destroy();
+      delete zombies[id];
+    }
+  }
+};
+
 // Listen for animate update
 app.ticker.add((delta) => {
   if (document.state == undefined) {
@@ -128,4 +165,5 @@ app.ticker.add((delta) => {
 
   updateProjectiles(document.state.projectiles);
   updateWalls(document.state.walls);
+  updateZombies(document.state.zombies);
 });

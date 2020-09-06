@@ -50,10 +50,13 @@ defmodule TanksGame.Server do
     TanksGame.Entity.Wall.new(100, 100)
     TanksGame.Entity.Wall.new(100, 150)
     TanksGame.Entity.Wall.new(100, 200)
-
     TanksGame.Entity.Wall.new(500, 100)
     TanksGame.Entity.Wall.new(500, 150)
     TanksGame.Entity.Wall.new(500, 200)
+
+    TanksGame.Entity.Zombie.new(250, 250)
+    TanksGame.Entity.Zombie.new(250, 270)
+    TanksGame.Entity.Zombie.new(250, 290)
 
     {:ok, %{@initial_state | id: id, player_id: player.id}}
   end
@@ -130,24 +133,24 @@ defmodule TanksGame.Server do
     projectiles =
       ECS.Registry.Entity.all(TanksGame.Entity.Projectile)
       |> Enum.map(fn entity ->
-        %{x: x, y: y} = entity.components.position.state
-        {x, y}
+        data = entity.components.position.state |> Map.take([:x, :y])
+        {entity.id, data}
       end)
       |> Map.new()
 
     walls =
       ECS.Registry.Entity.all(TanksGame.Entity.Wall)
       |> Enum.map(fn entity ->
-        %{x: x, y: y} = entity.components.position.state
-        {x, y}
+        data = entity.components.position.state |> Map.take([:x, :y])
+        {entity.id, data}
       end)
       |> Map.new()
 
     zombies =
       ECS.Registry.Entity.all(TanksGame.Entity.Zombie)
       |> Enum.map(fn entity ->
-        %{x: x, y: y} = entity.components.position.state
-        {x, y}
+        data = entity.components.position.state |> Map.take([:x, :y])
+        {entity.id, data}
       end)
       |> Map.new()
 
