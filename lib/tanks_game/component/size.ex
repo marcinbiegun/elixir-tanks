@@ -2,7 +2,7 @@ defmodule TanksGame.Components.Size do
   @type t :: %__MODULE__{
           pid: pid(),
           state: %{
-            radius: float()
+            size: float()
           }
         }
 

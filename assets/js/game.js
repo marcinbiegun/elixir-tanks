@@ -1,6 +1,8 @@
 import * as PIXI from "pixi.js";
 import { isObject } from "lodash";
 
+const playerId = 0;
+
 const FILES = {
   player: "images/bunny.png",
   projectile: "images/projectile_blue.png",
@@ -8,24 +10,12 @@ const FILES = {
   zombie: "images/zombie1_hold.png",
 };
 
-const addPlayer = (app) => {
-  // Create a new texture
-  const texture = PIXI.Texture.from(FILES.player);
-  const bunny = new PIXI.Sprite(texture);
-
-  // Center bunny sprite in local bunny coordinates
-  bunny.pivot.x = 12;
-  bunny.pivot.y = 20;
-  // bunny.pivot.x = Math.round(bunny.width / 2);
-  // bunny.pivot.y = Math.round(bunny.height / 2);
-
-  app.stage.addChild(bunny);
-
-  // Move container to the center
-  // bunny.x = app.screen.width / 2;
-  // bunny.y = app.screen.height / 2;
-
-  return bunny;
+const addStatsText = (app) => {
+  const basicText = new PIXI.Text("");
+  basicText.x = 20;
+  basicText.y = 20;
+  app.stage.addChild(basicText);
+  return basicText;
 };
 
 // Init app
@@ -37,13 +27,13 @@ const app = new PIXI.Application({
 });
 document.getElementById("game").appendChild(app.view);
 
-// Add bunny
-const bunny = addPlayer(app);
+// Add stats text
+const statsText = addStatsText(app);
 
 // OnClick - fire action
 const onClick = (event) => {
-  const sourceX = bunny.x;
-  const sourceY = bunny.y;
+  const sourceX = document.state.players[playerId].x;
+  const sourceY = document.state.players[playerId].y;
   const targetX = event.data.global.x;
   const targetY = event.data.global.y;
 
@@ -104,10 +94,11 @@ const updateWalls = (data) => {
       // Create
     } else {
       console.log("Creating wall");
-      const texture = PIXI.Texture.from(FILES.wall);
-      const sprite = new PIXI.Sprite(texture);
+      let texture = PIXI.Texture.from(FILES.wall);
+      let sprite = new PIXI.Sprite(texture);
       sprite.pivot.x = sprite.width / 2;
       sprite.pivot.y = sprite.height / 2;
+      sprite = wrapWithSizeCircle(sprite, wall.size);
       app.stage.addChild(sprite);
       walls[id] = sprite;
       walls[id].x = wall.x;
@@ -124,6 +115,52 @@ const updateWalls = (data) => {
   }
 };
 
+// Draw players
+let players = {};
+const updatePlayers = (data) => {
+  for (const [id, player] of Object.entries(data)) {
+    // Update
+    if (players[id] != null) {
+      players[id].x = player.x;
+      players[id].y = player.y;
+      // Create
+    } else {
+      console.log("Creating player");
+      let texture = PIXI.Texture.from(FILES.player);
+      let sprite = new PIXI.Sprite(texture);
+      sprite.pivot.x = 12;
+      sprite.pivot.y = 20;
+      sprite = wrapWithSizeCircle(sprite, player.size);
+      app.stage.addChild(sprite);
+      players[id] = sprite;
+      players[id].x = player.x;
+      players[id].y = player.y;
+    }
+  }
+
+  for (const [id, sprite] of Object.entries(players)) {
+    // Delete
+    if (data[id] == null) {
+      players[id].destroy();
+      delete players[id];
+    }
+  }
+};
+
+const wrapWithSizeCircle = (object, size) => {
+  let sizeCircle = new PIXI.Graphics();
+  sizeCircle.lineStyle(1, 0xffbd01, 1);
+  sizeCircle.beginFill(0xc34288, 0);
+  sizeCircle.drawCircle(0, 0, size);
+  sizeCircle.endFill();
+
+  let container = new PIXI.Container();
+  container.addChild(sizeCircle);
+  container.addChild(object);
+
+  return container;
+};
+
 // Draw zombies
 let zombies = {};
 const updateZombies = (data) => {
@@ -135,10 +172,11 @@ const updateZombies = (data) => {
       // Create
     } else {
       console.log("Creating zombie");
-      const texture = PIXI.Texture.from(FILES.zombie);
-      const sprite = new PIXI.Sprite(texture);
+      let texture = PIXI.Texture.from(FILES.zombie);
+      let sprite = new PIXI.Sprite(texture);
       sprite.pivot.x = sprite.width / 2;
       sprite.pivot.y = sprite.height / 2;
+      sprite = wrapWithSizeCircle(sprite, zombie.size);
       app.stage.addChild(sprite);
       zombies[id] = sprite;
       zombies[id].x = zombie.x;
@@ -160,10 +198,15 @@ app.ticker.add((delta) => {
   if (document.state == undefined) {
     return;
   }
-  bunny.x = document.state.x;
-  bunny.y = document.state.y;
 
+  updatePlayers(document.state.players);
   updateProjectiles(document.state.projectiles);
   updateWalls(document.state.walls);
   updateZombies(document.state.zombies);
+
+  statsText.text =
+    "" +
+    document.state.stats.last_tick_ms +
+    "ms\ntick: " +
+    document.state.stats.tick;
 });

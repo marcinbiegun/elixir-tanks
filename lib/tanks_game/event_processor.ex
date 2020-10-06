@@ -1,22 +1,42 @@
 defmodule TanksGame.EventProcessor do
+  require Logger
+
   def process_event(
         %TanksGame.Event.Control{entity_module: entity_module, entity_id: entity_id, data: data} =
-          _event
+          event
       ) do
-    entity = ECS.Registry.Entity.get(entity_module, entity_id)
+    case ECS.Registry.Entity.get(entity_module, entity_id) do
+      nil ->
+        Logger.error(
+          "Unable to process Control event, because entity #{entity_id} doesn't exist! Event: #{
+            inspect(event)
+          }"
+        )
 
-    entity.components.control.pid
-    |> ECS.Component.update(data)
+      entity ->
+        entity.components.control.pid
+        |> ECS.Component.update(data)
+    end
   end
 
   def process_event(
-        %TanksGame.Event.Destroy{entity_module: entity_module, entity_id: entity_id} = _event
+        %TanksGame.Event.Destroy{entity_module: entity_module, entity_id: entity_id} = event
       ) do
-    entity = ECS.Registry.Entity.get(entity_module, entity_id)
-    ECS.Entity.destroy(entity)
+    case ECS.Registry.Entity.get(entity_module, entity_id) do
+      nil ->
+        Logger.error(
+          "Unable to process Destroy event, because entity #{entity_id} doesn't exist! Event: #{
+            inspect(event)
+          }"
+        )
+
+      entity ->
+        ECS.Entity.destroy(entity)
+    end
   end
 
-  def process_event(_event) do
-    :unknown_event
+  def process_event(event) do
+    Logger.error("Can't process unknown event: #{inspect(event)}")
+    {:error, :unknown_event}
   end
 end

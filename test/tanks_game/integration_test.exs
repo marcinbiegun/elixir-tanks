@@ -145,4 +145,33 @@ defmodule TanksGame.IntegrationTest do
              ] = ECS.Queue.get(:internal) |> Enum.sort_by(& &1.entity_module)
     end
   end
+
+  describe "position cache" do
+    test "detecting collisions" do
+      assert [] == TanksGame.Cache.Position.colliding_entities(0, 0, 10)
+
+      projectile = TanksGame.Entity.Projectile.new(0, 0, 0, 0)
+      projectile_size = projectile.components.size.state.size
+      assert [] == TanksGame.Cache.Position.colliding_entities(0, 0, 10)
+
+      TanksGame.Cache.Position.update()
+
+      assert [{TanksGame.Entity.Projectile, 1}] ==
+               TanksGame.Cache.Position.colliding_entities(0, 0, 1)
+
+      assert [] ==
+               TanksGame.Cache.Position.colliding_entities(
+                 projectile_size / 2 + 2,
+                 projectile_size / 2 + 2,
+                 1
+               )
+
+      assert [{TanksGame.Entity.Projectile, 1}] ==
+               TanksGame.Cache.Position.colliding_entities(
+                 projectile_size / 2 + 2,
+                 projectile_size / 2 + 2,
+                 10
+               )
+    end
+  end
 end

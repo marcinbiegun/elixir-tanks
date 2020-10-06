@@ -26,7 +26,6 @@ defmodule ECS.Component do
 
   def get(pid) do
     state = ECS.Component.Agent.get(pid)
-    IO.inspect(state, label: "component.get state")
     %{pid: pid, state: state}
   end
 

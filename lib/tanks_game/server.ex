@@ -48,15 +48,18 @@ defmodule TanksGame.Server do
 
     player = TanksGame.Entity.Player.new()
 
-    TanksGame.Entity.Wall.new(100, 100)
-    TanksGame.Entity.Wall.new(100, 150)
-    TanksGame.Entity.Wall.new(100, 200)
-    TanksGame.Entity.Wall.new(500, 100)
-    TanksGame.Entity.Wall.new(500, 150)
-    TanksGame.Entity.Wall.new(500, 200)
+    Enum.each(1..8, fn i ->
+      TanksGame.Entity.Wall.new(150, 100 + i * 50)
+    end)
+
+    Enum.each(1..8, fn i ->
+      TanksGame.Entity.Wall.new(550, 100 + i * 50)
+    end)
 
     TanksGame.Entity.Zombie.new(250, 250)
+    TanksGame.Entity.Zombie.new(270, 250)
     TanksGame.Entity.Zombie.new(250, 270)
+    TanksGame.Entity.Zombie.new(290, 250)
     TanksGame.Entity.Zombie.new(250, 290)
 
     {:ok, %{@initial_state | id: id, player_id: player.id}}
@@ -68,14 +71,22 @@ defmodule TanksGame.Server do
     new_state = do_tick(state)
     client_state = state_for_client(new_state)
 
-    TanksWeb.Endpoint.broadcast!("game:#{state.id}", "tick", client_state)
-
     took_ns = System.os_time(:nanosecond) - start_ns
     took_ms = Float.round(took_ns / 1_000_000, 2)
 
+    client_state =
+      client_state
+      |> Map.put(:stats, %{
+        tick: state.tick,
+        last_tick_ms: took_ms
+      })
+
     # Logger.debug("Tick took #{round(took_ns / 1000)} μs")
 
+    TanksWeb.Endpoint.broadcast!("game:#{state.id}", "tick", client_state)
+
     Process.send_after(self(), :tick, max(@tickms - round(took_ms), 0))
+
     {:noreply, new_state}
   end
 
@@ -119,15 +130,15 @@ defmodule TanksGame.Server do
 
   defp do_tick(%{tick: tick} = state) do
     process_input_events()
+
+    TanksGame.Cache.Position.update()
+
     TanksGame.System.LifetimeDying.process()
-
-    if rem(tick, 10) == 0 do
-      TanksGame.System.AI.process()
-    end
-
+    if rem(tick, 10) == 0, do: TanksGame.System.AI.process()
     TanksGame.System.Movement.process()
     TanksGame.System.Velocity.process()
     TanksGame.System.Collision.process()
+
     process_internal_events()
 
     %{state | tick: tick + 1}
@@ -136,11 +147,28 @@ defmodule TanksGame.Server do
   defp state_for_client(state) do
     player = ECS.Registry.Entity.get(TanksGame.Entity.Player, state.player_id)
     %{x: player_x, y: player_y} = player.components.position.state
+    %{size: player_size} = player.components.size.state
+
+    players = %{
+      0 => %{
+        x: player_x,
+        y: player_y,
+        size: player_size
+      }
+    }
 
     projectiles =
       ECS.Registry.Entity.all(TanksGame.Entity.Projectile)
       |> Enum.map(fn entity ->
-        data = entity.components.position.state |> Map.take([:x, :y])
+        %{x: position_x, y: position_y} = entity.components.position.state
+        %{size: size_size} = entity.components.size.state
+
+        data = %{
+          x: position_x,
+          y: position_y,
+          size: size_size
+        }
+
         {entity.id, data}
       end)
       |> Map.new()
@@ -148,7 +176,15 @@ defmodule TanksGame.Server do
     walls =
       ECS.Registry.Entity.all(TanksGame.Entity.Wall)
       |> Enum.map(fn entity ->
-        data = entity.components.position.state |> Map.take([:x, :y])
+        %{x: position_x, y: position_y} = entity.components.position.state
+        %{size: size_size} = entity.components.size.state
+
+        data = %{
+          x: position_x,
+          y: position_y,
+          size: size_size
+        }
+
         {entity.id, data}
       end)
       |> Map.new()
@@ -156,12 +192,20 @@ defmodule TanksGame.Server do
     zombies =
       ECS.Registry.Entity.all(TanksGame.Entity.Zombie)
       |> Enum.map(fn entity ->
-        data = entity.components.position.state |> Map.take([:x, :y])
+        %{x: position_x, y: position_y} = entity.components.position.state
+        %{size: size_size} = entity.components.size.state
+
+        data = %{
+          x: position_x,
+          y: position_y,
+          size: size_size
+        }
+
         {entity.id, data}
       end)
       |> Map.new()
 
-    %{x: player_x, y: player_y, projectiles: projectiles, walls: walls, zombies: zombies}
+    %{players: players, projectiles: projectiles, walls: walls, zombies: zombies}
   end
 
   def process_input_events() do

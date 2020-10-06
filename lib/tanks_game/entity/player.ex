@@ -17,7 +17,7 @@ defmodule TanksGame.Entity.Player do
   defstruct [:id, :components]
 
   @speed 5
-  @size 1
+  @size 20
 
   def new() do
     control =
