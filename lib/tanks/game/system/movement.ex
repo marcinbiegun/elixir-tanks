@@ -1,7 +1,7 @@
-defmodule TanksGame.System.Movement do
-  alias TanksGame.Components.Position
-  alias TanksGame.Components.Control
-  alias TanksGame.Components.Size
+defmodule Tanks.Game.System.Movement do
+  alias Tanks.Game.Components.Position
+  alias Tanks.Game.Components.Control
+  alias Tanks.Game.Components.Size
 
   @component_types [Control, Position, Size]
   def component_types, do: @component_types
@@ -52,7 +52,7 @@ defmodule TanksGame.System.Movement do
   end
 
   defp validate_position(old_position, new_position, size, entity_id) do
-    if TanksGame.Cache.Position.colliding_entities(
+    if Tanks.Game.Cache.Position.colliding_entities(
          new_position.x,
          new_position.y,
          size,

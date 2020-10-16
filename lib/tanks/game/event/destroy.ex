@@ -1,4 +1,4 @@
-defmodule TanksGame.Event.Destroy do
+defmodule Tanks.Game.Event.Destroy do
   @type t :: %__MODULE__{
           entity_id: Integer.t(),
           entity_module: String.t()

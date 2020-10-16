@@ -1,5 +1,5 @@
-defmodule TanksGame.Entity.Projectile do
-  alias TanksGame.Components.{
+defmodule Tanks.Game.Entity.Projectile do
+  alias Tanks.Game.Components.{
     Lifetime,
     Position,
     Size,
@@ -21,10 +21,10 @@ defmodule TanksGame.Entity.Projectile do
   @size 10
 
   def new(x, y, vel_x, vel_y, lifetime \\ 10_000) do
-    lifetime = TanksGame.Components.Lifetime.new(lifetime)
-    position = TanksGame.Components.Position.new(%{x: x, y: y})
-    size = TanksGame.Components.Size.new(%{size: @size})
-    velocity = TanksGame.Components.Velocity.new(%{x: vel_x, y: vel_y})
+    lifetime = Tanks.Game.Components.Lifetime.new(lifetime)
+    position = Tanks.Game.Components.Position.new(%{x: x, y: y})
+    size = Tanks.Game.Components.Size.new(%{size: @size})
+    velocity = Tanks.Game.Components.Velocity.new(%{x: vel_x, y: vel_y})
 
     components = %{
       lifetime: lifetime,

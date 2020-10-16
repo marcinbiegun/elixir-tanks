@@ -1,4 +1,4 @@
-defmodule TanksGame.Event.Control do
+defmodule Tanks.Game.Event.Control do
   @type t :: %__MODULE__{
           data: map(),
           entity_id: Integer.t(),

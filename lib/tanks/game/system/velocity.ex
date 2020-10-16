@@ -1,6 +1,6 @@
-defmodule TanksGame.System.Velocity do
-  alias TanksGame.Components.Position
-  alias TanksGame.Components.Velocity
+defmodule Tanks.Game.System.Velocity do
+  alias Tanks.Game.Components.Position
+  alias Tanks.Game.Components.Velocity
 
   @component_types [Position, Velocity]
   def component_types, do: @component_types

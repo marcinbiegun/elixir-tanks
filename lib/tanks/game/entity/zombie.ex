@@ -1,5 +1,6 @@
-defmodule TanksGame.Entity.Player do
-  alias TanksGame.Components.{
+defmodule Tanks.Game.Entity.Zombie do
+  alias Tanks.Game.Components.{
+    Brain,
     Control,
     Size,
     Position
@@ -8,6 +9,7 @@ defmodule TanksGame.Entity.Player do
   @type t :: %__MODULE__{
           id: Integer.t(),
           components: %{
+            brain: Brain.t(),
             control: Control.t(),
             size: Size.t(),
             position: Position.t()
@@ -16,12 +18,14 @@ defmodule TanksGame.Entity.Player do
 
   defstruct [:id, :components]
 
-  @speed 5
+  @speed 1
   @size 20
 
-  def new() do
+  def new(x, y) do
+    brain = Tanks.Game.Components.Brain.new()
+
     control =
-      TanksGame.Components.Control.new(%{
+      Tanks.Game.Components.Control.new(%{
         down: false,
         left: false,
         right: false,
@@ -29,10 +33,11 @@ defmodule TanksGame.Entity.Player do
         speed: @speed
       })
 
-    size = TanksGame.Components.Size.new(%{size: @size})
-    position = TanksGame.Components.Position.new(%{x: 0, y: 0})
+    size = Tanks.Game.Components.Size.new(%{size: @size})
+    position = Tanks.Game.Components.Position.new(%{x: x, y: y})
 
     components = %{
+      brain: brain,
       control: control,
       size: size,
       position: position

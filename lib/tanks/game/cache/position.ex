@@ -1,6 +1,6 @@
-defmodule TanksGame.Cache.Position do
-  alias TanksGame.Components.Position
-  alias TanksGame.Components.Size
+defmodule Tanks.Game.Cache.Position do
+  alias Tanks.Game.Components.Position
+  alias Tanks.Game.Components.Size
   alias :math, as: Math
 
   @component_types [Position, Size]

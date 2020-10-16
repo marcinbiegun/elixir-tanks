@@ -1,4 +1,4 @@
-defmodule TanksGame.Components.Control do
+defmodule Tanks.Game.Components.Control do
   @type t :: %__MODULE__{
           pid: pid(),
           state: %{

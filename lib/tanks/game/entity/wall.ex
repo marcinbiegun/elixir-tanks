@@ -1,5 +1,5 @@
-defmodule TanksGame.Entity.Wall do
-  alias TanksGame.Components.{
+defmodule Tanks.Game.Entity.Wall do
+  alias Tanks.Game.Components.{
     Position,
     Size
   }
@@ -17,8 +17,8 @@ defmodule TanksGame.Entity.Wall do
   @size 30
 
   def new(x, y) do
-    position = TanksGame.Components.Position.new(%{x: x, y: y})
-    size = TanksGame.Components.Size.new(%{size: @size})
+    position = Tanks.Game.Components.Position.new(%{x: x, y: y})
+    size = Tanks.Game.Components.Size.new(%{size: @size})
 
     components = %{
       position: position,

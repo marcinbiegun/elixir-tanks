@@ -1,6 +1,6 @@
-defmodule TanksGame.Components.Position do
+defmodule Tanks.Game.Components.Velocity do
   @type t :: %__MODULE__{
-          pid: pid,
+          pid: pid(),
           state: %{
             x: Integer.t(),
             y: Integer.t()

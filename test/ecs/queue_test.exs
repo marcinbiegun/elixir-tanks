@@ -1,4 +1,4 @@
-defmodule TanksGame.ECS.QueueTest do
+defmodule Tanks.Game.ECS.QueueTest do
   use ExUnit.Case
 
   describe "queue" do
@@ -23,7 +23,7 @@ defmodule TanksGame.ECS.QueueTest do
       assert ECS.Queue.pop_all(:test) == ["C", "B", "A"]
       assert ECS.Queue.pop_all(:test) == []
 
-      TanksGame.reset()
+      Tanks.Game.reset()
     end
   end
 end

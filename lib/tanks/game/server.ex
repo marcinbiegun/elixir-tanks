@@ -1,4 +1,4 @@
-defmodule TanksGame.Server do
+defmodule Tanks.Game.Server do
   use GenServer
   require Logger
 
@@ -46,21 +46,21 @@ defmodule TanksGame.Server do
 
     Process.send_after(self(), :tick, @tickms)
 
-    player = TanksGame.Entity.Player.new()
+    player = Tanks.Game.Entity.Player.new()
 
     Enum.each(1..8, fn i ->
-      TanksGame.Entity.Wall.new(150, 100 + i * 50)
+      Tanks.Game.Entity.Wall.new(150, 100 + i * 50)
     end)
 
     Enum.each(1..8, fn i ->
-      TanksGame.Entity.Wall.new(550, 100 + i * 50)
+      Tanks.Game.Entity.Wall.new(550, 100 + i * 50)
     end)
 
-    TanksGame.Entity.Zombie.new(250, 250)
-    TanksGame.Entity.Zombie.new(270, 250)
-    TanksGame.Entity.Zombie.new(250, 270)
-    TanksGame.Entity.Zombie.new(290, 250)
-    TanksGame.Entity.Zombie.new(250, 290)
+    Tanks.Game.Entity.Zombie.new(250, 250)
+    Tanks.Game.Entity.Zombie.new(270, 250)
+    Tanks.Game.Entity.Zombie.new(250, 270)
+    Tanks.Game.Entity.Zombie.new(290, 250)
+    Tanks.Game.Entity.Zombie.new(250, 290)
 
     {:ok, %{@initial_state | id: id, player_id: player.id}}
   end
@@ -95,17 +95,17 @@ defmodule TanksGame.Server do
   end
 
   def handle_cast({:update_input, input}, state) do
-    event = TanksGame.Event.Control.new(TanksGame.Entity.Player, state.player_id, input)
+    event = Tanks.Game.Event.Control.new(Tanks.Game.Entity.Player, state.player_id, input)
     ECS.Queue.put(:input, event)
 
     {:noreply, state}
   end
 
   def handle_cast({:action, :fire, {velocity_x, velocity_y}}, state) do
-    player = ECS.Registry.Entity.get(TanksGame.Entity.Player, state.player_id)
+    player = ECS.Registry.Entity.get(Tanks.Game.Entity.Player, state.player_id)
     %{x: player_x, y: player_y} = player.components.position.state
 
-    TanksGame.Entity.Projectile.new(
+    Tanks.Game.Entity.Projectile.new(
       player_x,
       player_y,
       velocity_x * @projectile_speed,
@@ -131,13 +131,13 @@ defmodule TanksGame.Server do
   defp do_tick(%{tick: tick} = state) do
     process_input_events()
 
-    TanksGame.Cache.Position.update()
+    Tanks.Game.Cache.Position.update()
 
-    TanksGame.System.LifetimeDying.process()
-    if rem(tick, 10) == 0, do: TanksGame.System.AI.process()
-    TanksGame.System.Movement.process()
-    TanksGame.System.Velocity.process()
-    TanksGame.System.Collision.process()
+    Tanks.Game.System.LifetimeDying.process()
+    if rem(tick, 10) == 0, do: Tanks.Game.System.AI.process()
+    Tanks.Game.System.Movement.process()
+    Tanks.Game.System.Velocity.process()
+    Tanks.Game.System.Collision.process()
 
     process_internal_events()
 
@@ -145,7 +145,7 @@ defmodule TanksGame.Server do
   end
 
   defp state_for_client(state) do
-    player = ECS.Registry.Entity.get(TanksGame.Entity.Player, state.player_id)
+    player = ECS.Registry.Entity.get(Tanks.Game.Entity.Player, state.player_id)
     %{x: player_x, y: player_y} = player.components.position.state
     %{size: player_size} = player.components.size.state
 
@@ -158,7 +158,7 @@ defmodule TanksGame.Server do
     }
 
     projectiles =
-      ECS.Registry.Entity.all(TanksGame.Entity.Projectile)
+      ECS.Registry.Entity.all(Tanks.Game.Entity.Projectile)
       |> Enum.map(fn entity ->
         %{x: position_x, y: position_y} = entity.components.position.state
         %{size: size_size} = entity.components.size.state
@@ -174,7 +174,7 @@ defmodule TanksGame.Server do
       |> Map.new()
 
     walls =
-      ECS.Registry.Entity.all(TanksGame.Entity.Wall)
+      ECS.Registry.Entity.all(Tanks.Game.Entity.Wall)
       |> Enum.map(fn entity ->
         %{x: position_x, y: position_y} = entity.components.position.state
         %{size: size_size} = entity.components.size.state
@@ -190,7 +190,7 @@ defmodule TanksGame.Server do
       |> Map.new()
 
     zombies =
-      ECS.Registry.Entity.all(TanksGame.Entity.Zombie)
+      ECS.Registry.Entity.all(Tanks.Game.Entity.Zombie)
       |> Enum.map(fn entity ->
         %{x: position_x, y: position_y} = entity.components.position.state
         %{size: size_size} = entity.components.size.state
@@ -212,7 +212,7 @@ defmodule TanksGame.Server do
     events = ECS.Queue.pop_all(:input) |> Enum.reverse()
 
     Enum.map(events, fn event ->
-      TanksGame.EventProcessor.process_event(event)
+      Tanks.Game.EventProcessor.process_event(event)
     end)
   end
 
@@ -220,7 +220,7 @@ defmodule TanksGame.Server do
     events = ECS.Queue.pop_all(:internal) |> Enum.reverse()
 
     Enum.map(events, fn event ->
-      TanksGame.EventProcessor.process_event(event)
+      Tanks.Game.EventProcessor.process_event(event)
     end)
   end
 end

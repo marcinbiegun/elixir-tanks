@@ -1,4 +1,4 @@
-defmodule TanksGame.Components.Size do
+defmodule Tanks.Game.Components.Size do
   @type t :: %__MODULE__{
           pid: pid(),
           state: %{

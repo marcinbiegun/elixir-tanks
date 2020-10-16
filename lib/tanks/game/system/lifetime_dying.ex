@@ -1,5 +1,5 @@
-defmodule TanksGame.System.LifetimeDying do
-  alias TanksGame.Components.Lifetime
+defmodule Tanks.Game.System.LifetimeDying do
+  alias Tanks.Game.Components.Lifetime
 
   @component_types [Lifetime]
   def component_types, do: @component_types
@@ -15,7 +15,7 @@ defmodule TanksGame.System.LifetimeDying do
     lifetime = ECS.Component.get_state(lifetime_pid)
 
     if now_miliseconds >= lifetime.die_at do
-      event = TanksGame.Event.Destroy.new(entity_type, entity_id)
+      event = Tanks.Game.Event.Destroy.new(entity_type, entity_id)
       ECS.Queue.put(:internal, event)
     end
   end

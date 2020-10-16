@@ -1,5 +1,5 @@
-defmodule TanksGame.System.AI do
-  alias TanksGame.Components.{Brain, Control}
+defmodule Tanks.Game.System.AI do
+  alias Tanks.Game.Components.{Brain, Control}
 
   @component_types [Brain, Control]
   def component_types, do: @component_types

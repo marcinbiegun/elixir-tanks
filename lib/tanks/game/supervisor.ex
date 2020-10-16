@@ -1,4 +1,4 @@
-defmodule TanksGame.Supervisor do
+defmodule Tanks.Game.Supervisor do
   use DynamicSupervisor
 
   def start_link(_arg) do
@@ -12,7 +12,7 @@ defmodule TanksGame.Supervisor do
   def start_game(game_id) do
     DynamicSupervisor.start_child(
       __MODULE__,
-      %{id: game_id, start: {TanksGame.Server, :start_link, [game_id]}, restart: :transient}
+      %{id: game_id, start: {Tanks.Game.Server, :start_link, [game_id]}, restart: :transient}
     )
   end
 

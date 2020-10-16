@@ -1,8 +1,8 @@
-defmodule TanksGame.EventProcessor do
+defmodule Tanks.Game.EventProcessor do
   require Logger
 
   def process_event(
-        %TanksGame.Event.Control{entity_module: entity_module, entity_id: entity_id, data: data} =
+        %Tanks.Game.Event.Control{entity_module: entity_module, entity_id: entity_id, data: data} =
           event
       ) do
     case ECS.Registry.Entity.get(entity_module, entity_id) do
@@ -20,7 +20,7 @@ defmodule TanksGame.EventProcessor do
   end
 
   def process_event(
-        %TanksGame.Event.Destroy{entity_module: entity_module, entity_id: entity_id} = event
+        %Tanks.Game.Event.Destroy{entity_module: entity_module, entity_id: entity_id} = event
       ) do
     case ECS.Registry.Entity.get(entity_module, entity_id) do
       nil ->

@@ -1,18 +1,18 @@
-defmodule TanksGame.Components.Velocity do
+defmodule Tanks.Game.Components.Lifetime do
   @type t :: %__MODULE__{
           pid: pid(),
           state: %{
-            x: Integer.t(),
-            y: Integer.t()
+            die_at: Integer.t()
           }
         }
 
   use ECS.Component
 
-  # defstruct [:x, :y]
   defstruct [:pid, :state]
 
-  def new(%{x: _x, y: _y} = state) do
+  def new(lifetime) do
+    now = System.os_time(:millisecond)
+    state = %{die_at: now + lifetime}
     ECS.Component.new(__MODULE__, state)
   end
 end

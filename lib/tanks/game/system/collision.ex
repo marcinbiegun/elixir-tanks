@@ -1,12 +1,12 @@
-defmodule TanksGame.System.Collision do
-  alias TanksGame.Components.Position
-  alias TanksGame.Components.Size
+defmodule Tanks.Game.System.Collision do
+  alias Tanks.Game.Components.Position
+  alias Tanks.Game.Components.Size
   alias :math, as: Math
 
   # Must be sorted alphabetically
   @entity_collisions [
-    {TanksGame.Entity.Projectile, TanksGame.Entity.Wall},
-    {TanksGame.Entity.Projectile, TanksGame.Entity.Zombie}
+    {Tanks.Game.Entity.Projectile, Tanks.Game.Entity.Wall},
+    {Tanks.Game.Entity.Projectile, Tanks.Game.Entity.Zombie}
   ]
 
   defp interesting_collision?(entity_type, other_entity_type) do
@@ -57,14 +57,14 @@ defmodule TanksGame.System.Collision do
   end
 
   def resolve_collision(
-        TanksGame.Entity.Projectile,
+        Tanks.Game.Entity.Projectile,
         projectile_id,
-        TanksGame.Entity.Wall,
+        Tanks.Game.Entity.Wall,
         _wall_id
       ) do
     destroy_projectile =
-      TanksGame.Event.Destroy.new(
-        TanksGame.Entity.Projectile,
+      Tanks.Game.Event.Destroy.new(
+        Tanks.Game.Entity.Projectile,
         projectile_id
       )
 
@@ -72,22 +72,22 @@ defmodule TanksGame.System.Collision do
   end
 
   def resolve_collision(
-        TanksGame.Entity.Projectile,
+        Tanks.Game.Entity.Projectile,
         projectile_id,
-        TanksGame.Entity.Zombie,
+        Tanks.Game.Entity.Zombie,
         zombie_id
       ) do
     destroy_zombie =
-      TanksGame.Event.Destroy.new(
-        TanksGame.Entity.Zombie,
+      Tanks.Game.Event.Destroy.new(
+        Tanks.Game.Entity.Zombie,
         zombie_id
       )
 
     ECS.Queue.put(:internal, destroy_zombie)
 
     destroy_projectile =
-      TanksGame.Event.Destroy.new(
-        TanksGame.Entity.Projectile,
+      Tanks.Game.Event.Destroy.new(
+        Tanks.Game.Entity.Projectile,
         projectile_id
       )
 

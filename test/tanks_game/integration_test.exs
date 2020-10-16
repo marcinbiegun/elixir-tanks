@@ -1,16 +1,16 @@
-defmodule TanksGame.IntegrationTest do
+defmodule Tanks.Game.IntegrationTest do
   use ExUnit.Case
 
   setup do
     on_exit(fn ->
-      TanksGame.reset()
+      Tanks.Game.reset()
     end)
   end
 
   describe "entity registry" do
     test "getting entity by ID" do
-      player = TanksGame.Entity.Player.new()
-      fetched_player = ECS.Registry.Entity.get(TanksGame.Entity.Player, player.id)
+      player = Tanks.Game.Entity.Player.new()
+      fetched_player = ECS.Registry.Entity.get(Tanks.Game.Entity.Player, player.id)
 
       assert fetched_player.id == player.id
       assert fetched_player.components == player.components
@@ -19,25 +19,25 @@ defmodule TanksGame.IntegrationTest do
 
   describe "entities" do
     test "creating and reloading entities" do
-      player = TanksGame.Entity.Player.new()
+      player = Tanks.Game.Entity.Player.new()
 
-      assert player.__struct__ == TanksGame.Entity.Player
-      assert player.components.position.__struct__ == TanksGame.Components.Position
+      assert player.__struct__ == Tanks.Game.Entity.Player
+      assert player.components.position.__struct__ == Tanks.Game.Components.Position
 
       player = ECS.Entity.reload(player)
 
-      assert player.__struct__ == TanksGame.Entity.Player
-      assert player.components.position.__struct__ == TanksGame.Components.Position
+      assert player.__struct__ == Tanks.Game.Entity.Player
+      assert player.components.position.__struct__ == Tanks.Game.Components.Position
 
-      TanksGame.reset()
+      Tanks.Game.reset()
     end
 
     test "getting list of all entites of a given type" do
-      projectile1 = TanksGame.Entity.Projectile.new(0, 0, 1, 0)
-      projectile2 = TanksGame.Entity.Projectile.new(10, 10, 0, 1)
+      projectile1 = Tanks.Game.Entity.Projectile.new(0, 0, 1, 0)
+      projectile2 = Tanks.Game.Entity.Projectile.new(10, 10, 0, 1)
 
       [fetched_projectile1, fetched_projectile2] =
-        ECS.Registry.Entity.all(TanksGame.Entity.Projectile)
+        ECS.Registry.Entity.all(Tanks.Game.Entity.Projectile)
         |> Enum.sort_by(& &1.id)
 
       assert projectile1 == fetched_projectile1
@@ -47,17 +47,17 @@ defmodule TanksGame.IntegrationTest do
 
   describe "velocity system" do
     test "projectile movement" do
-      projectile = TanksGame.Entity.Projectile.new(0, 0, 1, 2)
+      projectile = Tanks.Game.Entity.Projectile.new(0, 0, 1, 2)
       assert projectile.components.position.state.x == 0
       assert projectile.components.position.state.y == 0
 
-      TanksGame.System.Velocity.process()
+      Tanks.Game.System.Velocity.process()
 
       projectile = ECS.Entity.reload(projectile)
       assert projectile.components.position.state.x == 1
       assert projectile.components.position.state.y == 2
 
-      TanksGame.System.Velocity.process()
+      Tanks.Game.System.Velocity.process()
 
       projectile = ECS.Entity.reload(projectile)
       assert projectile.components.position.state.x == 2
@@ -67,7 +67,7 @@ defmodule TanksGame.IntegrationTest do
 
   describe "control system" do
     test "player control" do
-      player = TanksGame.Entity.Player.new()
+      player = Tanks.Game.Entity.Player.new()
       assert player.components.control.state.right == false
 
       control = player.components.control
@@ -79,7 +79,7 @@ defmodule TanksGame.IntegrationTest do
       assert player.components.control.state.right == true
       assert player.components.position.state.x == 0
 
-      TanksGame.System.Movement.process()
+      Tanks.Game.System.Movement.process()
 
       player = ECS.Entity.reload(player)
       assert player.components.position.state.x == 5
@@ -89,21 +89,21 @@ defmodule TanksGame.IntegrationTest do
   describe "lifetime system" do
     test "test dying" do
       lifetime = 50
-      projectile = TanksGame.Entity.Projectile.new(0, 0, 0, 0, lifetime)
+      projectile = Tanks.Game.Entity.Projectile.new(0, 0, 0, 0, lifetime)
       projectile_id = projectile.id
 
-      TanksGame.System.LifetimeDying.process()
+      Tanks.Game.System.LifetimeDying.process()
 
       assert [] = ECS.Queue.get(:internal)
 
       Process.sleep(lifetime)
 
-      TanksGame.System.LifetimeDying.process()
+      Tanks.Game.System.LifetimeDying.process()
 
       assert [
-               %TanksGame.Event.Destroy{
+               %Tanks.Game.Event.Destroy{
                  entity_id: ^projectile_id,
-                 entity_module: TanksGame.Entity.Projectile
+                 entity_module: Tanks.Game.Entity.Projectile
                }
              ] = ECS.Queue.get(:internal)
     end
@@ -111,36 +111,36 @@ defmodule TanksGame.IntegrationTest do
 
   describe "collision system" do
     test "projectile vs wall collision" do
-      projectile = TanksGame.Entity.Projectile.new(0, 0, 0, 0)
+      projectile = Tanks.Game.Entity.Projectile.new(0, 0, 0, 0)
       projectile_id = projectile.id
-      _wall = TanksGame.Entity.Wall.new(0, 0)
+      _wall = Tanks.Game.Entity.Wall.new(0, 0)
 
-      TanksGame.System.Collision.process()
+      Tanks.Game.System.Collision.process()
 
       assert [
-               %TanksGame.Event.Destroy{
+               %Tanks.Game.Event.Destroy{
                  entity_id: ^projectile_id,
-                 entity_module: TanksGame.Entity.Projectile
+                 entity_module: Tanks.Game.Entity.Projectile
                }
              ] = ECS.Queue.get(:internal)
     end
 
     test "projectile vs zombie projectile collision" do
-      projectile = TanksGame.Entity.Projectile.new(0, 0, 0, 0)
+      projectile = Tanks.Game.Entity.Projectile.new(0, 0, 0, 0)
       projectile_id = projectile.id
-      zombie = TanksGame.Entity.Zombie.new(0, 0)
+      zombie = Tanks.Game.Entity.Zombie.new(0, 0)
       zombie_id = zombie.id
 
-      TanksGame.System.Collision.process()
+      Tanks.Game.System.Collision.process()
 
       assert [
-               %TanksGame.Event.Destroy{
+               %Tanks.Game.Event.Destroy{
                  entity_id: ^projectile_id,
-                 entity_module: TanksGame.Entity.Projectile
+                 entity_module: Tanks.Game.Entity.Projectile
                },
-               %TanksGame.Event.Destroy{
+               %Tanks.Game.Event.Destroy{
                  entity_id: ^zombie_id,
-                 entity_module: TanksGame.Entity.Zombie
+                 entity_module: Tanks.Game.Entity.Zombie
                }
              ] = ECS.Queue.get(:internal) |> Enum.sort_by(& &1.entity_module)
     end
@@ -148,26 +148,26 @@ defmodule TanksGame.IntegrationTest do
 
   describe "position cache" do
     test "detecting collisions" do
-      assert [] == TanksGame.Cache.Position.colliding_entities(0, 0, 10)
+      assert [] == Tanks.Game.Cache.Position.colliding_entities(0, 0, 10)
 
-      projectile = TanksGame.Entity.Projectile.new(0, 0, 0, 0)
+      projectile = Tanks.Game.Entity.Projectile.new(0, 0, 0, 0)
       projectile_size = projectile.components.size.state.size
-      assert [] == TanksGame.Cache.Position.colliding_entities(0, 0, 10)
+      assert [] == Tanks.Game.Cache.Position.colliding_entities(0, 0, 10)
 
-      TanksGame.Cache.Position.update()
+      Tanks.Game.Cache.Position.update()
 
-      assert [{TanksGame.Entity.Projectile, 1}] ==
-               TanksGame.Cache.Position.colliding_entities(0, 0, 1)
+      assert [{Tanks.Game.Entity.Projectile, 1}] ==
+               Tanks.Game.Cache.Position.colliding_entities(0, 0, 1)
 
       assert [] ==
-               TanksGame.Cache.Position.colliding_entities(
+               Tanks.Game.Cache.Position.colliding_entities(
                  projectile_size / 2 + 2,
                  projectile_size / 2 + 2,
                  1
                )
 
-      assert [{TanksGame.Entity.Projectile, 1}] ==
-               TanksGame.Cache.Position.colliding_entities(
+      assert [{Tanks.Game.Entity.Projectile, 1}] ==
+               Tanks.Game.Cache.Position.colliding_entities(
                  projectile_size / 2 + 2,
                  projectile_size / 2 + 2,
                  10

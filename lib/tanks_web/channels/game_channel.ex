@@ -10,7 +10,7 @@ defmodule TanksWeb.GameChannel do
 
     # Start game server
     response =
-      case TanksGame.Supervisor.start_game(game_id) do
+      case Tanks.Game.Supervisor.start_game(game_id) do
         {:ok, _pid} ->
           %{id: game_id, msg: "Created a new game"}
 
@@ -32,7 +32,7 @@ defmodule TanksWeb.GameChannel do
       ) do
     game_id = socket.assigns.current_game.id
     input = %{left: left, right: right, up: up, down: down}
-    TanksGame.Server.send_input(game_id, input)
+    Tanks.Game.Server.send_input(game_id, input)
 
     {:noreply, socket}
   end
@@ -43,7 +43,7 @@ defmodule TanksWeb.GameChannel do
         socket
       ) do
     game_id = socket.assigns.current_game.id
-    TanksGame.Server.send_action(game_id, :fire, {x, y})
+    Tanks.Game.Server.send_action(game_id, :fire, {x, y})
 
     {:noreply, socket}
   end
