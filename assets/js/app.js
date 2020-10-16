@@ -11,17 +11,22 @@ import "../css/app.scss";
 //
 //     import {Socket} from "phoenix"
 //
+
 import "phoenix_html";
 
 import socket from "./socket";
+import { consoleAppend, statusSet } from "./util";
 
 const gameId = 123;
 const channelId = `game:${gameId}`;
 const channel = socket.channel(channelId);
 document.channel = channel;
 
+statusSet("game id", gameId);
+
 channel.join().receive("ok", (responsePayload) => {
   console.log(responsePayload, `ok response on channel join ${channelId}`);
+  consoleAppend(responsePayload.msg);
 });
 channel.on("tick", (state) => {
   document.state = state;

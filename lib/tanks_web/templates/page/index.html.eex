@@ -1,5 +1,9 @@
 <section class="phx-hero">
-  <div id="game"></div>
+  <div id="container">
+    <ul id="status"></ul>
+    <div id="game"></div>
+    <ul id="console"></ul>
+  </div>
 </section>
 
 <section class="row">

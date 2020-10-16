@@ -38,3 +38,28 @@
 .container {
   max-width: 100%;
 }
+
+/* Game */
+
+.phx-hero {
+  padding: 15px;
+}
+
+#container {
+  display: flex;
+  ul {
+    list-style: none;
+  }
+}
+
+#game {
+  flex-grow: 1;
+}
+
+#status {
+  //width: 100px;
+}
+
+#console {
+  //width: 300px;
+}
