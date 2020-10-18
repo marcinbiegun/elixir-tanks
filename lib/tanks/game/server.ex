@@ -2,11 +2,11 @@ defmodule Tanks.Game.Server do
   use GenServer
   require Logger
 
-  @registry :servers_registry
+  @registry Registry.Tanks.Game.Server
   @tickms 16
 
   @initial_state %{
-    id: nil,
+    game_id: nil,
     player_id: nil,
     tick: 0
   }
@@ -15,34 +15,34 @@ defmodule Tanks.Game.Server do
 
   # API
 
-  def start_link(id) do
-    GenServer.start_link(__MODULE__, id, name: via_tuple(id))
+  def start_link(game_id) do
+    GenServer.start_link(__MODULE__, game_id, name: name(game_id))
   end
 
-  def state(id) do
-    GenServer.call(via_tuple(id), :state)
+  def state(game_id) do
+    GenServer.call(name(game_id), :state)
   end
 
-  def stop(id) do
-    GenServer.stop(via_tuple(id))
+  def stop(game_id) do
+    GenServer.stop(name(game_id))
   end
 
-  def crash(id) do
-    GenServer.cast(via_tuple(id), :raise)
+  def crash(game_id) do
+    GenServer.cast(name(game_id), :raise)
   end
 
-  def send_input(id, input) do
-    GenServer.cast(via_tuple(id), {:update_input, input})
+  def send_input(game_id, input) do
+    GenServer.cast(name(game_id), {:update_input, input})
   end
 
-  def send_action(id, :fire, {x, y}) do
-    GenServer.cast(via_tuple(id), {:action, :fire, {x, y}})
+  def send_action(game_id, :fire, {x, y}) do
+    GenServer.cast(name(game_id), {:action, :fire, {x, y}})
   end
 
   # Callbacks
 
-  def init(id) do
-    Logger.info("Starting #{__MODULE__} #{id}")
+  def init(game_id) do
+    Logger.info("Starting #{__MODULE__} #{game_id}")
 
     Process.send_after(self(), :tick, @tickms)
 
@@ -62,7 +62,7 @@ defmodule Tanks.Game.Server do
     Tanks.Game.Entity.Zombie.new(290, 250)
     Tanks.Game.Entity.Zombie.new(250, 290)
 
-    {:ok, %{@initial_state | id: id, player_id: player.id}}
+    {:ok, %{@initial_state | game_id: game_id, player_id: player.id}}
   end
 
   def handle_info(:tick, state) do
@@ -83,7 +83,7 @@ defmodule Tanks.Game.Server do
 
     # Logger.debug("Tick took #{round(took_ns / 1000)} μs")
 
-    TanksWeb.Endpoint.broadcast!("game:#{state.id}", "tick", client_state)
+    TanksWeb.Endpoint.broadcast!("game:#{state.game_id}", "tick", client_state)
 
     Process.send_after(self(), :tick, max(@tickms - round(took_ms), 0))
 
@@ -117,16 +117,15 @@ defmodule Tanks.Game.Server do
   end
 
   def handle_cast(:raise, state) do
-    raise RuntimeError, message: "Error, #{__MODULE__} #{state.id} has crashed"
+    raise RuntimeError, message: "Error, #{__MODULE__} #{state.game_id} has crashed"
   end
 
   def terminate(reason, state) do
-    Logger.info("Exiting worker: #{__MODULE__} #{state.id} with reason: #{inspect(reason)}")
+    Logger.info("Exiting worker: #{__MODULE__} #{state.game_id} with reason: #{inspect(reason)}")
   end
 
   ## Private
-  defp via_tuple(name),
-    do: {:via, Registry, {@registry, name}}
+  defp name(game_id), do: {:via, Registry, {@registry, game_id}}
 
   defp do_tick(%{tick: tick} = state) do
     process_input_events()

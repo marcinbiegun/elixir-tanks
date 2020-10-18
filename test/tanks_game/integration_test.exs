@@ -1,9 +1,11 @@
 defmodule Tanks.Game.IntegrationTest do
   use ExUnit.Case
 
+  @game_id 123
+
   setup do
     on_exit(fn ->
-      Tanks.Game.reset()
+      Tanks.Game.reset(@game_id)
     end)
   end
 
@@ -29,7 +31,7 @@ defmodule Tanks.Game.IntegrationTest do
       assert player.__struct__ == Tanks.Game.Entity.Player
       assert player.components.position.__struct__ == Tanks.Game.Components.Position
 
-      Tanks.Game.reset()
+      # Tanks.Game.reset()
     end
 
     test "getting list of all entites of a given type" do

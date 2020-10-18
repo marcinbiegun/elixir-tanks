@@ -1,0 +1,8 @@
+<section class="phx-hero">
+  <h1>You are inside a game</h1>
+  <div id="container">
+    <ul id="status"></ul>
+    <div id="game"></div>
+    <ul id="console"></ul>
+  </div>
+</section>

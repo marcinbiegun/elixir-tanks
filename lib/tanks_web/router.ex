@@ -17,6 +17,8 @@ defmodule TanksWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :index
+
+    resources "/games", GameController, only: [:index, :show, :delete]
   end
 
   # Other scopes may use custom stacks.

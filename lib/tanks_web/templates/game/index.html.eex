@@ -1,0 +1,11 @@
+<section class="phx-hero">
+<h1>List of games</h1>
+
+  <%= for game <- @games do %>
+    <p>Game ID: <%= game.id %>
+      <a class="button" href="<%= Routes.game_path(TanksWeb.Endpoint, :show, game.id) %>">Join</a>
+      <%= link "Delete", to: Routes.game_path(TanksWeb.Endpoint, :show, game.id), method: :delete, data: [confirm: "Are you sure?"], class: "btn btn-danger btn-xs" %>
+    </p>
+  <% end %>
+
+</section>

@@ -4,10 +4,10 @@ import { isObject } from "lodash";
 const playerId = 0;
 
 const FILES = {
-  player: "images/bunny.png",
-  projectile: "images/projectile_blue.png",
-  wall: "images/wall_16.png",
-  zombie: "images/zombie1_hold.png",
+  player: "/images/bunny.png",
+  projectile: "/images/projectile_blue.png",
+  wall: "/images/wall_16.png",
+  zombie: "/images/zombie1_hold.png",
 };
 
 const addStatsText = (app) => {

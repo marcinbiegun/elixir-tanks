@@ -1,6 +1,14 @@
 defmodule Tanks.Game.ECS.QueueTest do
   use ExUnit.Case
 
+  @game_id 123
+
+  setup do
+    on_exit(fn ->
+      Tanks.Game.reset(@game_id)
+    end)
+  end
+
   describe "queue" do
     test "works as FIFO queue" do
       ECS.Queue.register(:test)
@@ -22,8 +30,6 @@ defmodule Tanks.Game.ECS.QueueTest do
 
       assert ECS.Queue.pop_all(:test) == ["C", "B", "A"]
       assert ECS.Queue.pop_all(:test) == []
-
-      Tanks.Game.reset()
     end
   end
 end

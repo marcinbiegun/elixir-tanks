@@ -19,10 +19,11 @@ defmodule Tanks.Application do
       #
       ## Our processes
       {Tanks.Game.Supervisor, []},
-      {Registry, [keys: :unique, name: :servers_registry]}
+      {Registry, [keys: :unique, name: Registry.Tanks.Game.Server]}
     ]
 
-    Tanks.Game.start()
+    game_id = 123
+    Tanks.Game.start(game_id)
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
