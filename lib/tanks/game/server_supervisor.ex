@@ -1,4 +1,4 @@
-defmodule Tanks.Game.Supervisor do
+defmodule Tanks.Game.ServerSupervisor do
   use DynamicSupervisor
 
   def start_link(_arg) do
@@ -9,11 +9,21 @@ defmodule Tanks.Game.Supervisor do
     DynamicSupervisor.init(strategy: :one_for_one)
   end
 
-  def start_game(game_id) do
-    DynamicSupervisor.start_child(
-      __MODULE__,
-      %{id: game_id, start: {Tanks.Game.Server, :start_link, [game_id]}, restart: :transient}
-    )
+  def start_game_server(game_id) do
+    child_spec = %{
+      id: game_id,
+      start: {Tanks.Game.Server, :start_link, [game_id]},
+      restart: :transient
+    }
+
+    DynamicSupervisor.start_child(__MODULE__, child_spec)
+  end
+
+  def all_game_pids do
+    Supervisor.which_children(__MODULE__)
+    |> Enum.map(fn {_, child_pid, _, _} ->
+      child_pid
+    end)
   end
 
   def kill_children do

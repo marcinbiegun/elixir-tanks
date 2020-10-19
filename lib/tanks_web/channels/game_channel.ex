@@ -1,24 +1,19 @@
 defmodule TanksWeb.GameChannel do
   use TanksWeb, :channel
 
-  def join("game:" <> game_id_str, _params, socket) do
-    {game_id, ""} = Integer.parse(game_id_str)
-
+  def join("game:" <> game_id, _params, socket) do
     # Assign data to channel
     game = %{id: game_id}
     socket = assign(socket, :current_game, game)
 
     # Start game server
     response =
-      case Tanks.Game.Supervisor.start_game(game_id) do
-        {:ok, _pid} ->
-          %{id: game_id, msg: "Created a new game"}
-
-        {:error, {:already_started, _pid}} ->
-          %{id: game_id, msg: "Joined existing game"}
+      case Tanks.GameServer.get(game_id) do
+        {:ok, _game} ->
+          %{id: game_id, msg: "Joined game #{game_id}"}
 
         error ->
-          %{error: "Unable to start game server"}
+          %{msg: "Unable to join game #{game_id}: #{inspect(error)}"}
       end
 
     # Respond

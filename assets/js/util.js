@@ -24,3 +24,12 @@ export const consoleAppend = (data) => {
   li.appendChild(text);
   ul.appendChild(li);
 };
+
+export const readGameIdFromURL = () => {
+  var regex = /\/games\/[a-zA-z0-9]*/gi;
+  var result = regex.exec(location.pathname);
+  if (result == null) {
+    return null;
+  }
+  return result[0].split("/")[2];
+};

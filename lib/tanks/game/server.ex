@@ -20,7 +20,31 @@ defmodule Tanks.Game.Server do
   end
 
   def state(game_id) do
-    GenServer.call(name(game_id), :state)
+    if game_id in game_ids() do
+      GenServer.call(name(game_id), :state)
+    else
+      {:error, "not found"}
+    end
+  end
+
+  def game_ids do
+    Registry.select(@registry, [{{:"$1", :_, :_}, [], [:"$1"]}])
+  end
+
+  def summary(game_id) do
+    if game_id in game_ids() do
+      GenServer.call(name(game_id), :summary)
+    else
+      {:error, "not found"}
+    end
+  end
+
+  def all_summaries do
+    game_ids()
+    |> Enum.map(fn game_id ->
+      {:ok, summary} = summary(game_id)
+      summary
+    end)
   end
 
   def stop(game_id) do
@@ -42,9 +66,11 @@ defmodule Tanks.Game.Server do
   # Callbacks
 
   def init(game_id) do
-    Logger.info("Starting #{__MODULE__} #{game_id}")
+    Logger.info("Starting game server #{__MODULE__} #{game_id}")
 
     Process.send_after(self(), :tick, @tickms)
+
+    Tanks.GameECS.start(game_id)
 
     player = Tanks.Game.Entity.Player.new()
 
@@ -62,6 +88,7 @@ defmodule Tanks.Game.Server do
     Tanks.Game.Entity.Zombie.new(290, 250)
     Tanks.Game.Entity.Zombie.new(250, 290)
 
+    # TODO: should use after_init
     {:ok, %{@initial_state | game_id: game_id, player_id: player.id}}
   end
 
@@ -92,6 +119,19 @@ defmodule Tanks.Game.Server do
 
   def handle_call(:state, _from, state) do
     {:reply, {:ok, state}, state}
+  end
+
+  def handle_call(:summary, _from, state) do
+    full_state = state_for_client(state)
+
+    stats = %{
+      players_count: full_state.players |> Map.keys() |> length(),
+      zombies_count: full_state.zombies |> Map.keys() |> length()
+    }
+
+    summary = Map.merge(state, stats)
+
+    {:reply, {:ok, summary}, state}
   end
 
   def handle_cast({:update_input, input}, state) do
@@ -204,7 +244,13 @@ defmodule Tanks.Game.Server do
       end)
       |> Map.new()
 
-    %{players: players, projectiles: projectiles, walls: walls, zombies: zombies}
+    %{
+      game_id: state.game_id,
+      players: players,
+      projectiles: projectiles,
+      walls: walls,
+      zombies: zombies
+    }
   end
 
   def process_input_events() do

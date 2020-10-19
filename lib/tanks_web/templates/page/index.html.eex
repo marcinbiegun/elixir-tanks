@@ -1,8 +1,4 @@
 <section class="phx-hero">
   <h1>Elixir ECS Tanks Game</h1>
-  <ul>
-    <li>
-      <a href="/games">See games</a>
-    </li>
-  </ul>
+  <a href="/games" class="button">See active games</a>
 </section>

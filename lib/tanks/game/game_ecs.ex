@@ -1,4 +1,4 @@
-defmodule Tanks.Game do
+defmodule Tanks.GameECS do
   @moduledoc """
   TanksGame module keeps game logic modules.
   """

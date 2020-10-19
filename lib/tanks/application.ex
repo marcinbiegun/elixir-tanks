@@ -18,12 +18,9 @@ defmodule Tanks.Application do
       TanksWeb.Endpoint,
       #
       ## Our processes
-      {Tanks.Game.Supervisor, []},
+      {Tanks.Game.ServerSupervisor, []},
       {Registry, [keys: :unique, name: Registry.Tanks.Game.Server]}
     ]
-
-    game_id = 123
-    Tanks.Game.start(game_id)
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options

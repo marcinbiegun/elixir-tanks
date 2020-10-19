@@ -18,7 +18,7 @@ defmodule TanksWeb.Router do
 
     get "/", PageController, :index
 
-    resources "/games", GameController, only: [:index, :show, :delete]
+    resources "/games", GameController, only: [:index, :show, :delete, :create]
   end
 
   # Other scopes may use custom stacks.

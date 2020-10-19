@@ -15,22 +15,31 @@ import "../css/app.scss";
 import "phoenix_html";
 
 import socket from "./socket";
-import { consoleAppend, statusSet } from "./util";
+import { consoleAppend, statusSet, readGameIdFromURL } from "./util";
+import { init as initGame } from "./game";
+import { init as initInput } from "./input";
 
-const gameId = 123;
-const channelId = `game:${gameId}`;
-const channel = socket.channel(channelId);
-document.channel = channel;
+const gameEl = document.getElementById("game");
+const gameId = readGameIdFromURL();
 
-statusSet("game id", gameId);
+if (gameEl != null && gameId != null) {
+  console.log("Initializing game connection...");
+  const channelId = `game:${gameId}`;
+  const channel = socket.channel(channelId);
+  document.channel = channel;
 
-channel.join().receive("ok", (responsePayload) => {
-  console.log(responsePayload, `ok response on channel join ${channelId}`);
-  consoleAppend(responsePayload.msg);
-});
-channel.on("tick", (state) => {
-  document.state = state;
-});
+  statusSet("game id", gameId);
 
-import "./game";
-import "./input";
+  channel.join().receive("ok", (responsePayload) => {
+    console.log(responsePayload, `ok response on channel join ${channelId}`);
+    consoleAppend(responsePayload.msg);
+  });
+  channel.on("tick", (state) => {
+    document.state = state;
+  });
+
+  initInput();
+  initGame(gameEl);
+
+  console.log("Connected to game " + gameId);
+}

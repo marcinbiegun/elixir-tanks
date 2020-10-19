@@ -18,18 +18,6 @@ const addStatsText = (app) => {
   return basicText;
 };
 
-// Init app
-const app = new PIXI.Application({
-  width: 800,
-  height: 600,
-  backgroundColor: 0x1099bb,
-  resolution: window.devicePixelRatio || 1,
-});
-document.getElementById("game").appendChild(app.view);
-
-// Add stats text
-const statsText = addStatsText(app);
-
 // OnClick - fire action
 const onClick = (event) => {
   const sourceX = document.state.players[playerId].x;
@@ -50,13 +38,24 @@ const onClick = (event) => {
   const actionData = { type: "fire", x: nx, y: ny };
   document.channel.push("action", actionData, 10000);
 };
-app.renderer.plugins.interaction.on("pointerup", onClick);
+
+const wrapWithSizeCircle = (object, size) => {
+  let sizeCircle = new PIXI.Graphics();
+  sizeCircle.lineStyle(1, 0xffbd01, 1);
+  sizeCircle.beginFill(0xc34288, 0);
+  sizeCircle.drawCircle(0, 0, size);
+  sizeCircle.endFill();
+
+  let container = new PIXI.Container();
+  container.addChild(sizeCircle);
+  container.addChild(object);
+
+  return container;
+};
 
 // Draw projectiles
-let projectiles = {};
-const updateProjectiles = (data) => {
+const updateProjectiles = (app, projectiles, data) => {
   for (const [id, projectile] of Object.entries(data)) {
-    // console.log(id, projectile, projectiles[id]);
     // Update projectile
     if (projectiles[id] != null) {
       projectiles[id].x = projectile.x;
@@ -81,11 +80,12 @@ const updateProjectiles = (data) => {
       delete projectiles[id];
     }
   }
+
+  return projectiles;
 };
 
 // Draw walls
-let walls = {};
-const updateWalls = (data) => {
+const updateWalls = (app, walls, data) => {
   for (const [id, wall] of Object.entries(data)) {
     // Update
     if (walls[id] != null) {
@@ -113,11 +113,12 @@ const updateWalls = (data) => {
       delete walls[id];
     }
   }
+
+  return walls;
 };
 
 // Draw players
-let players = {};
-const updatePlayers = (data) => {
+const updatePlayers = (app, players, data) => {
   for (const [id, player] of Object.entries(data)) {
     // Update
     if (players[id] != null) {
@@ -145,25 +146,12 @@ const updatePlayers = (data) => {
       delete players[id];
     }
   }
-};
 
-const wrapWithSizeCircle = (object, size) => {
-  let sizeCircle = new PIXI.Graphics();
-  sizeCircle.lineStyle(1, 0xffbd01, 1);
-  sizeCircle.beginFill(0xc34288, 0);
-  sizeCircle.drawCircle(0, 0, size);
-  sizeCircle.endFill();
-
-  let container = new PIXI.Container();
-  container.addChild(sizeCircle);
-  container.addChild(object);
-
-  return container;
+  return players;
 };
 
 // Draw zombies
-let zombies = {};
-const updateZombies = (data) => {
+const updateZombies = (app, zombies, data) => {
   for (const [id, zombie] of Object.entries(data)) {
     // Update
     if (zombies[id] != null) {
@@ -191,22 +179,55 @@ const updateZombies = (data) => {
       delete zombies[id];
     }
   }
+
+  return zombies;
 };
 
-// Listen for animate update
-app.ticker.add((delta) => {
-  if (document.state == undefined) {
-    return;
-  }
+export const init = (gameEl) => {
+  // Init app
+  const app = new PIXI.Application({
+    width: 800,
+    height: 600,
+    backgroundColor: 0x1099bb,
+    resolution: window.devicePixelRatio || 1,
+  });
 
-  updatePlayers(document.state.players);
-  updateProjectiles(document.state.projectiles);
-  updateWalls(document.state.walls);
-  updateZombies(document.state.zombies);
+  gameEl.appendChild(app.view);
 
-  statsText.text =
-    "" +
-    document.state.stats.last_tick_ms +
-    "ms\ntick: " +
-    document.state.stats.tick;
-});
+  // Add stats text
+  const statsText = addStatsText(app);
+
+  const db = {
+    projectiles: {},
+    walls: {},
+    players: {},
+    zombies: {},
+  };
+
+  // Listen for animate update
+  app.ticker.add((delta) => {
+    if (document.state == undefined) {
+      //console.log("Cannot start PIXI app - document.state is undefined");
+      return;
+    }
+
+    db.players = updatePlayers(app, db.players, document.state.players);
+    db.projectiles = updateProjectiles(
+      app,
+      db.projectiles,
+      document.state.projectiles
+    );
+    db.walls = updateWalls(app, db.walls, document.state.walls);
+    db.zombies = updateZombies(app, db.zombies, document.state.zombies);
+
+    statsText.text =
+      "" +
+      document.state.stats.last_tick_ms +
+      "ms\ntick: " +
+      document.state.stats.tick;
+  });
+
+  app.renderer.plugins.interaction.on("pointerup", onClick);
+
+  return app;
+};
