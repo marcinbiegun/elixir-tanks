@@ -9,31 +9,26 @@ defmodule Tanks.Game.Cache.Position do
   @initial_state []
   def initial_state, do: @initial_state
 
-  defp component_tuples do
-    ECS.Registry.ComponentTuple.build_registry_id(@component_types)
-    |> ECS.Registry.ComponentTuple.get()
+  def update(game_id) do
+    ECS.Cache.clear(game_id, __MODULE__)
+
+    component_tuples(game_id)
+    |> Enum.map(&put_entity(game_id, &1))
   end
 
-  def update do
-    ECS.Cache.clear(__MODULE__)
-
-    component_tuples()
-    |> Enum.map(&put_entity/1)
-  end
-
-  defp put_entity({entity_type, entity_id, {position_pid, size_pid}}) do
+  defp put_entity(game_id, {entity_type, entity_id, {position_pid, size_pid}}) do
     %{x: x, y: y} = ECS.Component.get_state(position_pid)
     %{size: size} = ECS.Component.get_state(size_pid)
     elem = {x, y, size, entity_type, entity_id}
 
-    ECS.Cache.update(__MODULE__, fn state ->
+    ECS.Cache.update(game_id, __MODULE__, fn state ->
       [elem | state]
     end)
   end
 
   # API
-  def colliding_entities(check_x, check_y, check_size, self_entity_id \\ -1) do
-    ECS.Cache.get(__MODULE__)
+  def colliding_entities(game_id, check_x, check_y, check_size, self_entity_id \\ -1) do
+    ECS.Cache.get(game_id, __MODULE__)
     |> Enum.filter(fn {_x, _y, _size, _entity_type, entity_id} ->
       entity_id != self_entity_id
     end)
@@ -44,5 +39,10 @@ defmodule Tanks.Game.Cache.Position do
     |> Enum.map(fn {_x, _y, _size, entity_type, entity_id} ->
       {entity_type, entity_id}
     end)
+  end
+
+  defp component_tuples(game_id) do
+    id = ECS.Registry.ComponentTuple.build_registry_id(@component_types)
+    ECS.Registry.ComponentTuple.get(game_id, id)
   end
 end

@@ -1,16 +1,16 @@
 defmodule ECS.Registry.Entity do
   @initial_state %{}
 
-  def start do
-    Agent.start_link(fn -> @initial_state end, name: __MODULE__)
+  def start(game_id) do
+    Agent.start_link(fn -> @initial_state end, name: name(game_id))
   end
 
-  def clear do
-    Agent.update(__MODULE__, fn _state -> @initial_state end)
+  def clear(game_id) do
+    Agent.update(name(game_id), fn _state -> @initial_state end)
   end
 
-  def put(%type{id: id} = entity) do
-    Agent.update(__MODULE__, fn state ->
+  def put(game_id, %type{id: id} = entity) do
+    Agent.update(name(game_id), fn state ->
       type_map =
         Map.get(state, type, %{})
         |> Map.put(id, pack(entity))
@@ -19,8 +19,18 @@ defmodule ECS.Registry.Entity do
     end)
   end
 
-  def all(type) do
-    Agent.get(__MODULE__, fn state ->
+  def all(game_id) do
+    Agent.get(name(game_id), fn state ->
+      Enum.flat_map(state, fn {type, collection} ->
+        Enum.map(collection, fn {id, packed} ->
+          unpack(packed, type, id)
+        end)
+      end)
+    end)
+  end
+
+  def all(game_id, type) do
+    Agent.get(name(game_id), fn state ->
       Map.get(state, type, %{})
       |> Enum.map(fn {id, packed} ->
         unpack(packed, type, id)
@@ -28,26 +38,26 @@ defmodule ECS.Registry.Entity do
     end)
   end
 
-  def state() do
-    Agent.get(__MODULE__, fn state -> state end)
+  def state(game_id) do
+    Agent.get(name(game_id), fn state -> state end)
   end
 
-  def get(type, id) do
-    Agent.get(__MODULE__, fn state ->
+  def get(game_id, type, id) do
+    Agent.get(name(game_id), fn state ->
       Map.get(state, type, %{})
       |> Map.get(id)
       |> unpack(type, id)
     end)
   end
 
-  def remove(type, id) do
-    Agent.update(__MODULE__, fn state ->
+  def remove(game_id, type, id) do
+    Agent.update(name(game_id), fn state ->
       {_removed, new_map} = Map.get(state, type, %{}) |> Map.pop(id)
       Map.put(state, type, new_map)
     end)
   end
 
-  def pack(%{components: components} = _entity) do
+  defp pack(%{components: components} = _entity) do
     components
     |> Enum.map(fn {key, %type{pid: pid}} ->
       {key, {type, pid}}
@@ -55,9 +65,9 @@ defmodule ECS.Registry.Entity do
     |> Map.new()
   end
 
-  def unpack(nil, _type, _id), do: nil
+  defp unpack(nil, _type, _id), do: nil
 
-  def unpack(packed, type, id) do
+  defp unpack(packed, type, id) do
     components =
       packed
       |> Enum.map(fn {key, {component_type, pid}} ->
@@ -69,4 +79,6 @@ defmodule ECS.Registry.Entity do
 
     struct(type, %{id: id, components: components})
   end
+
+  defp name(game_id), do: {:via, Registry, {Registry.ECS.Registry.Entity, game_id}}
 end

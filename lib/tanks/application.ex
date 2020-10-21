@@ -18,8 +18,15 @@ defmodule Tanks.Application do
       TanksWeb.Endpoint,
       #
       ## Our processes
+      %{id: ECS.Registry.Id, start: {ECS.Registry.Id, :start, []}},
+      # {ECS.Registry.Id, {ECS.Registry.Id, :start, []}},
       {Tanks.Game.ServerSupervisor, []},
-      {Registry, [keys: :unique, name: Registry.Tanks.Game.Server]}
+      {Registry, [keys: :unique, name: Registry.Tanks.Game.Server]},
+      {Registry, [keys: :unique, name: Registry.ECS.Registry.Component]},
+      {Registry, [keys: :unique, name: Registry.ECS.Registry.ComponentTuple]},
+      {Registry, [keys: :unique, name: Registry.ECS.Registry.Entity]},
+      {Registry, [keys: :unique, name: Registry.ECS.Queue]},
+      {Registry, [keys: :unique, name: Registry.ECS.Cache]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

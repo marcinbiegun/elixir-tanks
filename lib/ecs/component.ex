@@ -20,7 +20,6 @@ defmodule ECS.Component do
 
   def new(component_type, initial_state) do
     {:ok, pid} = ECS.Component.Agent.start_link(initial_state)
-    ECS.Registry.Component.put(component_type, pid)
     struct(component_type, %{pid: pid, state: initial_state})
   end
 
@@ -36,11 +35,5 @@ defmodule ECS.Component do
   def update(pid, new_state) do
     ECS.Component.Agent.set(pid, new_state)
     %{pid: pid, state: new_state}
-  end
-
-  def destroy(component_type, pid) do
-    ECS.Registry.Component.remove(component_type, pid)
-    ECS.Component.Agent.stop(pid)
-    :ok
   end
 end

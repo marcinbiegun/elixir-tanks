@@ -28,75 +28,84 @@ defmodule Tanks.GameECS do
     register_caches(game_id)
   end
 
-  defp start_registers(_game_id) do
-    ECS.Registry.Component.start()
-    ECS.Registry.ComponentTuple.start()
-    ECS.Registry.Entity.start()
-    ECS.Registry.Id.start()
+  defp start_registers(game_id) do
+    ECS.Registry.Component.start(game_id)
+    ECS.Registry.ComponentTuple.start(game_id)
+    ECS.Registry.Entity.start(game_id)
   end
 
-  defp clear_registers(_game_id) do
-    ECS.Registry.Component.clear()
-    ECS.Registry.ComponentTuple.clear()
-    ECS.Registry.Entity.clear()
-    ECS.Registry.Id.clear()
-    ECS.Queue.clear()
+  defp clear_registers(game_id) do
+    ECS.Registry.Component.clear(game_id)
+    ECS.Registry.ComponentTuple.clear(game_id)
+    ECS.Registry.Entity.clear(game_id)
+    ECS.Queue.clear(game_id)
   end
 
-  defp register_systems(_game_id) do
-    Tanks.Game.System.Velocity.component_types()
-    |> ECS.Registry.ComponentTuple.build_registry_id()
-    |> ECS.Registry.ComponentTuple.init_register_type()
+  defp register_systems(game_id) do
+    reg_id =
+      Tanks.Game.System.Velocity.component_types()
+      |> ECS.Registry.ComponentTuple.build_registry_id()
 
-    Tanks.Game.System.Movement.component_types()
-    |> ECS.Registry.ComponentTuple.build_registry_id()
-    |> ECS.Registry.ComponentTuple.init_register_type()
+    ECS.Registry.ComponentTuple.init_register_type(game_id, reg_id)
 
-    Tanks.Game.System.LifetimeDying.component_types()
-    |> ECS.Registry.ComponentTuple.build_registry_id()
-    |> ECS.Registry.ComponentTuple.init_register_type()
+    reg_id =
+      Tanks.Game.System.Movement.component_types()
+      |> ECS.Registry.ComponentTuple.build_registry_id()
 
-    Tanks.Game.System.Collision.component_types()
-    |> ECS.Registry.ComponentTuple.build_registry_id()
-    |> ECS.Registry.ComponentTuple.init_register_type()
+    ECS.Registry.ComponentTuple.init_register_type(game_id, reg_id)
 
-    Tanks.Game.System.AI.component_types()
-    |> ECS.Registry.ComponentTuple.build_registry_id()
-    |> ECS.Registry.ComponentTuple.init_register_type()
+    reg_id =
+      Tanks.Game.System.LifetimeDying.component_types()
+      |> ECS.Registry.ComponentTuple.build_registry_id()
+
+    ECS.Registry.ComponentTuple.init_register_type(game_id, reg_id)
+
+    reg_id =
+      Tanks.Game.System.Collision.component_types()
+      |> ECS.Registry.ComponentTuple.build_registry_id()
+
+    ECS.Registry.ComponentTuple.init_register_type(game_id, reg_id)
+
+    reg_id =
+      Tanks.Game.System.AI.component_types()
+      |> ECS.Registry.ComponentTuple.build_registry_id()
+
+    ECS.Registry.ComponentTuple.init_register_type(game_id, reg_id)
   end
 
   # Queues
 
   def start_queues(game_id) do
-    ECS.Queue.start()
+    ECS.Queue.start(game_id)
   end
 
   def clear_queues(game_id) do
-    ECS.Queue.clear()
+    ECS.Queue.clear(game_id)
   end
 
   def register_queues(game_id) do
-    ECS.Queue.register(:input)
-    ECS.Queue.register(:output)
-    ECS.Queue.register(:internal)
+    ECS.Queue.register(game_id, :input)
+    ECS.Queue.register(game_id, :output)
+    ECS.Queue.register(game_id, :internal)
   end
 
   # Caches
 
   def start_caches(game_id) do
-    ECS.Cache.start()
+    ECS.Cache.start(game_id)
   end
 
   def clear_caches(game_id) do
-    ECS.Cache.clear()
+    ECS.Cache.clear(game_id)
   end
 
   def register_caches(game_id) do
-    Tanks.Game.Cache.Position
-    |> ECS.Cache.register()
+    ECS.Cache.register(game_id, Tanks.Game.Cache.Position)
 
-    Tanks.Game.Cache.Position.component_types()
-    |> ECS.Registry.ComponentTuple.build_registry_id()
-    |> ECS.Registry.ComponentTuple.init_register_type()
+    reg_id =
+      Tanks.Game.Cache.Position.component_types()
+      |> ECS.Registry.ComponentTuple.build_registry_id()
+
+    ECS.Registry.ComponentTuple.init_register_type(game_id, reg_id)
   end
 end

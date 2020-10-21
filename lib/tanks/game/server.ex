@@ -48,6 +48,7 @@ defmodule Tanks.Game.Server do
   end
 
   def stop(game_id) do
+    Tanks.GameECS.reset(game_id)
     GenServer.stop(name(game_id))
   end
 
@@ -72,24 +73,39 @@ defmodule Tanks.Game.Server do
 
     Tanks.GameECS.start(game_id)
 
-    player = Tanks.Game.Entity.Player.new()
+    # player =
+    #   Tanks.Game.Entity.Player.new()
+    #   |> Tanks.Game.Ops.add_entity(game_id)
 
-    Enum.each(1..8, fn i ->
-      Tanks.Game.Entity.Wall.new(150, 100 + i * 50)
-    end)
+    # Enum.each(1..8, fn i ->
+    #   Tanks.Game.Entity.Wall.new(150, 100 + i * 50)
+    #   |> Tanks.Game.Ops.add_entity(game_id)
+    # end)
 
-    Enum.each(1..8, fn i ->
-      Tanks.Game.Entity.Wall.new(550, 100 + i * 50)
-    end)
+    # Enum.each(1..8, fn i ->
+    #   Tanks.Game.Entity.Wall.new(550, 100 + i * 50)
+    #   |> Tanks.Game.Ops.add_entity(game_id)
+    # end)
 
-    Tanks.Game.Entity.Zombie.new(250, 250)
-    Tanks.Game.Entity.Zombie.new(270, 250)
-    Tanks.Game.Entity.Zombie.new(250, 270)
-    Tanks.Game.Entity.Zombie.new(290, 250)
-    Tanks.Game.Entity.Zombie.new(250, 290)
+    # Tanks.Game.Entity.Zombie.new(250, 250)
+    # |> Tanks.Game.Ops.add_entity(game_id)
+
+    # Tanks.Game.Entity.Zombie.new(270, 250)
+    # |> Tanks.Game.Ops.add_entity(game_id)
+
+    # Tanks.Game.Entity.Zombie.new(250, 270)
+    # |> Tanks.Game.Ops.add_entity(game_id)
+
+    # Tanks.Game.Entity.Zombie.new(290, 250)
+    # |> Tanks.Game.Ops.add_entity(game_id)
+
+    # Tanks.Game.Entity.Zombie.new(250, 290)
+    # |> Tanks.Game.Ops.add_entity(game_id)
 
     # TODO: should use after_init
-    {:ok, %{@initial_state | game_id: game_id, player_id: player.id}}
+    # {:ok, %{@initial_state | game_id: game_id, player_id: player.id}}
+
+    {:ok, %{@initial_state | game_id: game_id, player_id: 0}}
   end
 
   def handle_info(:tick, state) do
@@ -135,14 +151,20 @@ defmodule Tanks.Game.Server do
   end
 
   def handle_cast({:update_input, input}, state) do
-    event = Tanks.Game.Event.Control.new(Tanks.Game.Entity.Player, state.player_id, input)
-    ECS.Queue.put(:input, event)
+    event =
+      Tanks.Game.Event.Control.new(
+        Tanks.Game.Entity.Player,
+        state.player_id,
+        input
+      )
+
+    ECS.Queue.put(state.game_id, :input, event)
 
     {:noreply, state}
   end
 
   def handle_cast({:action, :fire, {velocity_x, velocity_y}}, state) do
-    player = ECS.Registry.Entity.get(Tanks.Game.Entity.Player, state.player_id)
+    player = ECS.Registry.Entity.get(state.game_id, Tanks.Game.Entity.Player, state.player_id)
     %{x: player_x, y: player_y} = player.components.position.state
 
     Tanks.Game.Entity.Projectile.new(
@@ -152,6 +174,7 @@ defmodule Tanks.Game.Server do
       velocity_y * @projectile_speed,
       2000
     )
+    |> Tanks.Game.Ops.add_entity(state.game_id)
 
     {:noreply, state}
   end
@@ -167,24 +190,24 @@ defmodule Tanks.Game.Server do
   ## Private
   defp name(game_id), do: {:via, Registry, {@registry, game_id}}
 
-  defp do_tick(%{tick: tick} = state) do
-    process_input_events()
+  defp do_tick(%{tick: tick, game_id: game_id} = state) do
+    process_input_events(game_id)
 
-    Tanks.Game.Cache.Position.update()
+    Tanks.Game.Cache.Position.update(game_id)
 
-    Tanks.Game.System.LifetimeDying.process()
-    if rem(tick, 10) == 0, do: Tanks.Game.System.AI.process()
-    Tanks.Game.System.Movement.process()
-    Tanks.Game.System.Velocity.process()
-    Tanks.Game.System.Collision.process()
+    Tanks.Game.System.LifetimeDying.process(game_id)
+    if rem(tick, 10) == 0, do: Tanks.Game.System.AI.process(game_id)
+    Tanks.Game.System.Movement.process(game_id)
+    Tanks.Game.System.Velocity.process(game_id)
+    Tanks.Game.System.Collision.process(game_id)
 
-    process_internal_events()
+    process_internal_events(game_id)
 
     %{state | tick: tick + 1}
   end
 
-  defp state_for_client(state) do
-    player = ECS.Registry.Entity.get(Tanks.Game.Entity.Player, state.player_id)
+  defp state_for_client(%{game_id: game_id} = state) do
+    player = ECS.Registry.Entity.get(game_id, Tanks.Game.Entity.Player, state.player_id)
     %{x: player_x, y: player_y} = player.components.position.state
     %{size: player_size} = player.components.size.state
 
@@ -197,7 +220,7 @@ defmodule Tanks.Game.Server do
     }
 
     projectiles =
-      ECS.Registry.Entity.all(Tanks.Game.Entity.Projectile)
+      ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Projectile)
       |> Enum.map(fn entity ->
         %{x: position_x, y: position_y} = entity.components.position.state
         %{size: size_size} = entity.components.size.state
@@ -213,7 +236,7 @@ defmodule Tanks.Game.Server do
       |> Map.new()
 
     walls =
-      ECS.Registry.Entity.all(Tanks.Game.Entity.Wall)
+      ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Wall)
       |> Enum.map(fn entity ->
         %{x: position_x, y: position_y} = entity.components.position.state
         %{size: size_size} = entity.components.size.state
@@ -229,7 +252,7 @@ defmodule Tanks.Game.Server do
       |> Map.new()
 
     zombies =
-      ECS.Registry.Entity.all(Tanks.Game.Entity.Zombie)
+      ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Zombie)
       |> Enum.map(fn entity ->
         %{x: position_x, y: position_y} = entity.components.position.state
         %{size: size_size} = entity.components.size.state
@@ -253,19 +276,19 @@ defmodule Tanks.Game.Server do
     }
   end
 
-  def process_input_events() do
-    events = ECS.Queue.pop_all(:input) |> Enum.reverse()
+  def process_input_events(game_id) do
+    events = ECS.Queue.pop_all(game_id, :input) |> Enum.reverse()
 
     Enum.map(events, fn event ->
-      Tanks.Game.EventProcessor.process_event(event)
+      Tanks.Game.EventProcessor.process_event(game_id, event)
     end)
   end
 
-  def process_internal_events() do
-    events = ECS.Queue.pop_all(:internal) |> Enum.reverse()
+  def process_internal_events(game_id) do
+    events = ECS.Queue.pop_all(game_id, :internal) |> Enum.reverse()
 
     Enum.map(events, fn event ->
-      Tanks.Game.EventProcessor.process_event(event)
+      Tanks.Game.EventProcessor.process_event(game_id, event)
     end)
   end
 end

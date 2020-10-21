@@ -3,33 +3,27 @@ defmodule Tanks.Game.ECS.QueueTest do
 
   @game_id 123
 
-  setup do
-    on_exit(fn ->
-      Tanks.Game.reset(@game_id)
-    end)
-  end
-
   describe "queue" do
     test "works as FIFO queue" do
-      ECS.Queue.register(:test)
+      ECS.Queue.register(@game_id, :test)
 
-      ECS.Queue.put(:test, "first")
-      ECS.Queue.put(:test, "second")
+      ECS.Queue.put(@game_id, :test, "first")
+      ECS.Queue.put(@game_id, :test, "second")
 
-      assert ECS.Queue.get(:test) == ["second", "first"]
-      assert ECS.Queue.pop(:test) == "second"
-      assert ECS.Queue.get(:test) == ["first"]
-      assert ECS.Queue.pop(:test) == "first"
-      assert ECS.Queue.get(:test) == []
-      assert ECS.Queue.pop(:test) == nil
-      assert ECS.Queue.get(:test) == []
+      assert ECS.Queue.get(@game_id, :test) == ["second", "first"]
+      assert ECS.Queue.pop(@game_id, :test) == "second"
+      assert ECS.Queue.get(@game_id, :test) == ["first"]
+      assert ECS.Queue.pop(@game_id, :test) == "first"
+      assert ECS.Queue.get(@game_id, :test) == []
+      assert ECS.Queue.pop(@game_id, :test) == nil
+      assert ECS.Queue.get(@game_id, :test) == []
 
-      ECS.Queue.put(:test, "A")
-      ECS.Queue.put(:test, "B")
-      ECS.Queue.put(:test, "C")
+      ECS.Queue.put(@game_id, :test, "A")
+      ECS.Queue.put(@game_id, :test, "B")
+      ECS.Queue.put(@game_id, :test, "C")
 
-      assert ECS.Queue.pop_all(:test) == ["C", "B", "A"]
-      assert ECS.Queue.pop_all(:test) == []
+      assert ECS.Queue.pop_all(@game_id, :test) == ["C", "B", "A"]
+      assert ECS.Queue.pop_all(@game_id, :test) == []
     end
   end
 end

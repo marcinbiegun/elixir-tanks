@@ -1,37 +1,41 @@
 defmodule ECS.Cache do
   @initial_state %{}
 
-  def start do
-    Agent.start_link(fn -> @initial_state end, name: __MODULE__)
+  # TODO: move out of ECS module
+
+  def start(game_id) do
+    Agent.start_link(fn -> @initial_state end, name: name(game_id))
   end
 
-  def clear do
-    Agent.update(__MODULE__, fn _state -> @initial_state end)
+  def clear(game_id) do
+    Agent.update(name(game_id), fn _state -> @initial_state end)
   end
 
-  def register(type) do
-    Agent.update(__MODULE__, fn state ->
+  def register(game_id, type) do
+    Agent.update(name(game_id), fn state ->
       new_type_state = Map.get(state, type, type.initial_state())
       Map.put(state, type, new_type_state)
     end)
   end
 
-  def update(type, update_fn) do
-    Agent.update(__MODULE__, fn state ->
+  def update(game_id, type, update_fn) do
+    Agent.update(name(game_id), fn state ->
       new_type_state = update_fn.(Map.get(state, type))
       Map.put(state, type, new_type_state)
     end)
   end
 
-  def clear(type) do
-    Agent.update(__MODULE__, fn state ->
+  def clear(game_id, type) do
+    Agent.update(name(game_id), fn state ->
       Map.put(state, type, type.initial_state())
     end)
   end
 
-  def get(type) do
-    Agent.get(__MODULE__, fn state ->
+  def get(game_id, type) do
+    Agent.get(name(game_id), fn state ->
       Map.get(state, type)
     end)
   end
+
+  defp name(game_id), do: {:via, Registry, {Registry.ECS.Cache, game_id}}
 end

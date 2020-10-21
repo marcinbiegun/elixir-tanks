@@ -5,8 +5,8 @@ defmodule Tanks.Game.System.Velocity do
   @component_types [Position, Velocity]
   def component_types, do: @component_types
 
-  def process do
-    component_tuples()
+  def process(game_id) do
+    component_tuples(game_id)
     |> Enum.each(fn tuple -> dispatch(tuple, :move) end)
   end
 
@@ -20,8 +20,8 @@ defmodule Tanks.Game.System.Velocity do
     end
   end
 
-  defp component_tuples do
-    ECS.Registry.ComponentTuple.build_registry_id(@component_types)
-    |> ECS.Registry.ComponentTuple.get()
+  defp component_tuples(game_id) do
+    id = ECS.Registry.ComponentTuple.build_registry_id(@component_types)
+    ECS.Registry.ComponentTuple.get(game_id, id)
   end
 end

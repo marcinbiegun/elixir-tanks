@@ -16,10 +16,10 @@ defmodule Tanks.Game.System.Collision do
   @component_types [Position, Size]
   def component_types, do: @component_types
 
-  def process do
-    component_tuples()
+  def process(game_id) do
+    component_tuples(game_id)
     |> Enum.map(fn tuple -> build(tuple, :move) end)
-    |> detect()
+    |> detect(game_id)
   end
 
   defp build({entity_type, entity_id, {position_pid, size_pid}}, :move) do
@@ -29,7 +29,7 @@ defmodule Tanks.Game.System.Collision do
     {entity_type, entity_id, pos_x, pos_y, size}
   end
 
-  defp detect(collidables) do
+  defp detect(collidables, game_id) do
     Utils.Combinatorics.combinations(collidables, 2)
     |> Enum.map(fn collidables_pair ->
       collidables_pair |> Enum.sort_by(&elem(&1, 0))
@@ -47,6 +47,7 @@ defmodule Tanks.Game.System.Collision do
 
       if distance < size / 2 + other_size / 2 do
         resolve_collision(
+          game_id,
           entity_type,
           entity_id,
           other_entity_type,
@@ -57,47 +58,49 @@ defmodule Tanks.Game.System.Collision do
   end
 
   def resolve_collision(
+        game_id,
         Tanks.Game.Entity.Projectile,
         projectile_id,
         Tanks.Game.Entity.Wall,
         _wall_id
       ) do
-    destroy_projectile =
+    destroy_projectile_event =
       Tanks.Game.Event.Destroy.new(
         Tanks.Game.Entity.Projectile,
         projectile_id
       )
 
-    ECS.Queue.put(:internal, destroy_projectile)
+    ECS.Queue.put(game_id, :internal, destroy_projectile_event)
   end
 
   def resolve_collision(
+        game_id,
         Tanks.Game.Entity.Projectile,
         projectile_id,
         Tanks.Game.Entity.Zombie,
         zombie_id
       ) do
-    destroy_zombie =
+    destroy_zombie_event =
       Tanks.Game.Event.Destroy.new(
         Tanks.Game.Entity.Zombie,
         zombie_id
       )
 
-    ECS.Queue.put(:internal, destroy_zombie)
+    ECS.Queue.put(game_id, :internal, destroy_zombie_event)
 
-    destroy_projectile =
+    destroy_projectile_event =
       Tanks.Game.Event.Destroy.new(
         Tanks.Game.Entity.Projectile,
         projectile_id
       )
 
-    ECS.Queue.put(:internal, destroy_projectile)
+    ECS.Queue.put(game_id, :internal, destroy_projectile_event)
   end
 
   def resolve_collision(_, _, _, _), do: :ok
 
-  defp component_tuples do
-    ECS.Registry.ComponentTuple.build_registry_id(@component_types)
-    |> ECS.Registry.ComponentTuple.get()
+  defp component_tuples(game_id) do
+    id = ECS.Registry.ComponentTuple.build_registry_id(@component_types)
+    ECS.Registry.ComponentTuple.get(game_id, id)
   end
 end
