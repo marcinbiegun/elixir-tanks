@@ -18,4 +18,8 @@ defmodule Tanks.GameServer do
   def delete(game_id) do
     Tanks.Game.Server.stop(game_id)
   end
+
+  def join_player(game_id, token) do
+    Tanks.Game.Server.join_player(game_id, token)
+  end
 end

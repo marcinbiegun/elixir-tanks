@@ -18,14 +18,20 @@ import socket from "./socket";
 import { consoleAppend, statusSet, readGameIdFromURL } from "./util";
 import { init as initGame } from "./game";
 import { init as initInput } from "./input";
+import { generateToken } from "./crypto";
 
 const gameEl = document.getElementById("game");
 const gameId = readGameIdFromURL();
 
+const playerToken = generateToken();
+document.playerToken = playerToken;
+
 if (gameEl != null && gameId != null) {
   console.log("Initializing game connection...");
   const channelId = `game:${gameId}`;
-  const channel = socket.channel(channelId);
+  //const channel = socket.channel(channelId);
+  const params = { playerToken: playerToken };
+  const channel = socket.channel(channelId, params);
   document.channel = channel;
 
   statusSet("game id", gameId);
@@ -33,6 +39,8 @@ if (gameEl != null && gameId != null) {
   channel.join().receive("ok", (responsePayload) => {
     console.log(responsePayload, `ok response on channel join ${channelId}`);
     consoleAppend(responsePayload.msg);
+    console.log("Setting player ID " + responsePayload.player_id);
+    document.playerId = responsePayload.player_id;
   });
   channel.on("tick", (state) => {
     document.state = state;

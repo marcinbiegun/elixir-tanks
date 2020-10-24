@@ -1,8 +1,6 @@
 import * as PIXI from "pixi.js";
 import { isObject } from "lodash";
 
-const playerId = 0;
-
 const FILES = {
   player: "/images/bunny.png",
   projectile: "/images/projectile_blue.png",
@@ -20,8 +18,8 @@ const addStatsText = (app) => {
 
 // OnClick - fire action
 const onClick = (event) => {
-  const sourceX = document.state.players[playerId].x;
-  const sourceY = document.state.players[playerId].y;
+  const sourceX = document.state.players[document.playerId].x;
+  const sourceY = document.state.players[document.playerId].y;
   const targetX = event.data.global.x;
   const targetY = event.data.global.y;
 

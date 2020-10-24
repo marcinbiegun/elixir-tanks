@@ -7,7 +7,6 @@ defmodule Tanks.Game.Server do
 
   @initial_state %{
     game_id: nil,
-    player_id: nil,
     tick: 0
   }
 
@@ -56,12 +55,16 @@ defmodule Tanks.Game.Server do
     GenServer.cast(name(game_id), :raise)
   end
 
-  def send_input(game_id, input) do
-    GenServer.cast(name(game_id), {:update_input, input})
+  def send_input(game_id, player_id, input) do
+    GenServer.cast(name(game_id), {:update_input, player_id, input})
   end
 
-  def send_action(game_id, :fire, {x, y}) do
-    GenServer.cast(name(game_id), {:action, :fire, {x, y}})
+  def send_action(game_id, player_id, :fire, {x, y}) do
+    GenServer.cast(name(game_id), {:action, player_id, :fire, {x, y}})
+  end
+
+  def join_player(game_id, token) do
+    GenServer.call(name(game_id), {:join_player, token})
   end
 
   # Callbacks
@@ -105,7 +108,7 @@ defmodule Tanks.Game.Server do
     # TODO: should use after_init
     # {:ok, %{@initial_state | game_id: game_id, player_id: player.id}}
 
-    {:ok, %{@initial_state | game_id: game_id, player_id: 0}}
+    {:ok, %{@initial_state | game_id: game_id}}
   end
 
   def handle_info(:tick, state) do
@@ -150,21 +153,34 @@ defmodule Tanks.Game.Server do
     {:reply, {:ok, summary}, state}
   end
 
-  def handle_cast({:update_input, input}, state) do
+  def handle_call({:join_player, player_token}, _from, %{game_id: game_id} = state) do
+    player =
+      Tanks.Game.Entity.Player.new()
+      |> Tanks.Game.Ops.add_entity(game_id)
+
+    player = %{id: player.id, token: player_token}
+
+    {:reply, {:ok, player}, state}
+  end
+
+  def handle_cast({:update_input, player_id, input}, %{game_id: game_id} = state) do
     event =
       Tanks.Game.Event.Control.new(
         Tanks.Game.Entity.Player,
-        state.player_id,
+        player_id,
         input
       )
 
-    ECS.Queue.put(state.game_id, :input, event)
+    ECS.Queue.put(game_id, :input, event)
 
     {:noreply, state}
   end
 
-  def handle_cast({:action, :fire, {velocity_x, velocity_y}}, state) do
-    player = ECS.Registry.Entity.get(state.game_id, Tanks.Game.Entity.Player, state.player_id)
+  def handle_cast(
+        {:action, player_id, :fire, {velocity_x, velocity_y}},
+        %{game_id: game_id} = state
+      ) do
+    player = ECS.Registry.Entity.get(state.game_id, Tanks.Game.Entity.Player, player_id)
     %{x: player_x, y: player_y} = player.components.position.state
 
     Tanks.Game.Entity.Projectile.new(
@@ -174,7 +190,7 @@ defmodule Tanks.Game.Server do
       velocity_y * @projectile_speed,
       2000
     )
-    |> Tanks.Game.Ops.add_entity(state.game_id)
+    |> Tanks.Game.Ops.add_entity(game_id)
 
     {:noreply, state}
   end
@@ -206,18 +222,22 @@ defmodule Tanks.Game.Server do
     %{state | tick: tick + 1}
   end
 
-  defp state_for_client(%{game_id: game_id} = state) do
-    player = ECS.Registry.Entity.get(game_id, Tanks.Game.Entity.Player, state.player_id)
-    %{x: player_x, y: player_y} = player.components.position.state
-    %{size: player_size} = player.components.size.state
+  defp state_for_client(%{game_id: game_id} = _state) do
+    players =
+      ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Player)
+      |> Enum.map(fn entity ->
+        %{x: position_x, y: position_y} = entity.components.position.state
+        %{size: size_size} = entity.components.size.state
 
-    players = %{
-      0 => %{
-        x: player_x,
-        y: player_y,
-        size: player_size
-      }
-    }
+        data = %{
+          x: position_x,
+          y: position_y,
+          size: size_size
+        }
+
+        {entity.id, data}
+      end)
+      |> Map.new()
 
     projectiles =
       ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Projectile)
@@ -268,7 +288,7 @@ defmodule Tanks.Game.Server do
       |> Map.new()
 
     %{
-      game_id: state.game_id,
+      game_id: game_id,
       players: players,
       projectiles: projectiles,
       walls: walls,
