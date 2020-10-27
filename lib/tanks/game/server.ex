@@ -2,6 +2,8 @@ defmodule Tanks.Game.Server do
   use GenServer
   require Logger
 
+  alias Tanks.Game.Server.Impl
+
   @registry Registry.Tanks.Game.Server
   @tickms 16
 
@@ -10,12 +12,10 @@ defmodule Tanks.Game.Server do
     tick: 0
   }
 
-  @projectile_speed 10.0
-
   # API
 
-  def start_link(game_id) do
-    GenServer.start_link(__MODULE__, game_id, name: name(game_id))
+  def start_link(game_id, opts \\ []) do
+    GenServer.start_link(__MODULE__, {game_id, opts}, name: name(game_id))
   end
 
   def state(game_id) do
@@ -67,85 +67,51 @@ defmodule Tanks.Game.Server do
     GenServer.call(name(game_id), {:join_player, token})
   end
 
+  def spawn_level(game_id) do
+    GenServer.call(name(game_id), {:spawn_level})
+  end
+
   # Callbacks
 
-  def init(game_id) do
-    Logger.info("Starting game server #{__MODULE__} #{game_id}")
+  def init({game_id, opts}) do
+    Logger.info("Starting game server #{__MODULE__} #{game_id} whith ipts #{inspect(opts)}")
 
-    Process.send_after(self(), :tick, @tickms)
+    if Keyword.get(opts, :no_tick) != true do
+      Process.send_after(self(), :tick, @tickms)
+    end
 
     Tanks.GameECS.start(game_id)
-
-    # player =
-    #   Tanks.Game.Entity.Player.new()
-    #   |> Tanks.Game.GameECS.add_entity(game_id)
-
-    # Enum.each(1..8, fn i ->
-    #   Tanks.Game.Entity.Wall.new(150, 100 + i * 50)
-    #   |> Tanks.Game.GameECS.add_entity(game_id)
-    # end)
-
-    # Enum.each(1..8, fn i ->
-    #   Tanks.Game.Entity.Wall.new(550, 100 + i * 50)
-    #   |> Tanks.Game.GameECS.add_entity(game_id)
-    # end)
-
-    # Tanks.Game.Entity.Zombie.new(250, 250)
-    # |> Tanks.Game.GameECS.add_entity(game_id)
-
-    # Tanks.Game.Entity.Zombie.new(270, 250)
-    # |> Tanks.Game.GameECS.add_entity(game_id)
-
-    # Tanks.Game.Entity.Zombie.new(250, 270)
-    # |> Tanks.Game.GameECS.add_entity(game_id)
-
-    # Tanks.Game.Entity.Zombie.new(290, 250)
-    # |> Tanks.Game.GameECS.add_entity(game_id)
-
-    # Tanks.Game.Entity.Zombie.new(250, 290)
-    # |> Tanks.Game.GameECS.add_entity(game_id)
-
-    # TODO: should use after_init
-    # {:ok, %{@initial_state | game_id: game_id, player_id: player.id}}
 
     {:ok, %{@initial_state | game_id: game_id}}
   end
 
-  def handle_info(:tick, state) do
-    start_ns = System.os_time(:nanosecond)
-
-    new_state = do_tick(state)
-    client_state = state_for_client(new_state)
-
-    took_ns = System.os_time(:nanosecond) - start_ns
-    took_ms = Float.round(took_ns / 1_000_000, 2)
-
-    client_state =
-      client_state
-      |> Map.put(:stats, %{
-        tick: state.tick,
-        last_tick_ms: took_ms
-      })
-
-    # Logger.debug("Tick took #{round(took_ns / 1000)} μs")
+  def handle_info(:tick, %{game_id: game_id, tick: tick} = state) do
+    {:ok, client_state, took_ms} = Impl.tick(game_id, tick)
 
     TanksWeb.Endpoint.broadcast!("game:#{state.game_id}", "tick", client_state)
 
     Process.send_after(self(), :tick, max(@tickms - round(took_ms), 0))
 
-    {:noreply, new_state}
+    {:noreply, %{state | tick: tick + 1}}
+  end
+
+  def handle_call({:spawn_level}, _from, %{game_id: game_id} = state) do
+    Tanks.Game.Content.Level.create_level_entities()
+    |> Enum.map(&Tanks.GameECS.add_entity(&1, game_id))
+
+    {:reply, :ok, state}
   end
 
   def handle_call(:state, _from, state) do
     {:reply, {:ok, state}, state}
   end
 
-  def handle_call(:summary, _from, state) do
-    full_state = state_for_client(state)
+  def handle_call(:summary, _from, %{game_id: game_id} = state) do
+    client_state = Impl.build_client_state(game_id)
 
     stats = %{
-      players_count: full_state.players |> Map.keys() |> length(),
-      zombies_count: full_state.zombies |> Map.keys() |> length()
+      players_count: client_state.players |> Map.keys() |> length(),
+      zombies_count: client_state.zombies |> Map.keys() |> length()
     }
 
     summary = Map.merge(state, stats)
@@ -156,7 +122,7 @@ defmodule Tanks.Game.Server do
   def handle_call({:join_player, player_token}, _from, %{game_id: game_id} = state) do
     player =
       Tanks.Game.Entity.Player.new()
-      |> Tanks.Game.GameECS.add_entity(game_id)
+      |> Tanks.GameECS.add_entity(game_id)
 
     player = %{id: player.id, token: player_token}
 
@@ -183,14 +149,8 @@ defmodule Tanks.Game.Server do
     player = ECS.Registry.Entity.get(state.game_id, Tanks.Game.Entity.Player, player_id)
     %{x: player_x, y: player_y} = player.components.position.state
 
-    Tanks.Game.Entity.Projectile.new(
-      player_x,
-      player_y,
-      velocity_x * @projectile_speed,
-      velocity_y * @projectile_speed,
-      2000
-    )
-    |> Tanks.Game.GameECS.add_entity(game_id)
+    Tanks.Game.Content.Weapon.fire_projectile(player_x, player_y, velocity_x, velocity_y)
+    |> Tanks.GameECS.add_entity(game_id)
 
     {:noreply, state}
   end
@@ -204,111 +164,6 @@ defmodule Tanks.Game.Server do
   end
 
   ## Private
+
   defp name(game_id), do: {:via, Registry, {@registry, game_id}}
-
-  defp do_tick(%{tick: tick, game_id: game_id} = state) do
-    process_input_events(game_id)
-
-    Tanks.Game.Cache.Position.update(game_id)
-
-    Tanks.Game.System.LifetimeDying.process(game_id)
-    if rem(tick, 10) == 0, do: Tanks.Game.System.AI.process(game_id)
-    Tanks.Game.System.Movement.process(game_id)
-    Tanks.Game.System.Velocity.process(game_id)
-    Tanks.Game.System.Collision.process(game_id)
-
-    process_internal_events(game_id)
-
-    %{state | tick: tick + 1}
-  end
-
-  defp state_for_client(%{game_id: game_id} = _state) do
-    players =
-      ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Player)
-      |> Enum.map(fn entity ->
-        %{x: position_x, y: position_y} = entity.components.position.state
-        %{size: size_size} = entity.components.size.state
-
-        data = %{
-          x: position_x,
-          y: position_y,
-          size: size_size
-        }
-
-        {entity.id, data}
-      end)
-      |> Map.new()
-
-    projectiles =
-      ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Projectile)
-      |> Enum.map(fn entity ->
-        %{x: position_x, y: position_y} = entity.components.position.state
-        %{size: size_size} = entity.components.size.state
-
-        data = %{
-          x: position_x,
-          y: position_y,
-          size: size_size
-        }
-
-        {entity.id, data}
-      end)
-      |> Map.new()
-
-    walls =
-      ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Wall)
-      |> Enum.map(fn entity ->
-        %{x: position_x, y: position_y} = entity.components.position.state
-        %{size: size_size} = entity.components.size.state
-
-        data = %{
-          x: position_x,
-          y: position_y,
-          size: size_size
-        }
-
-        {entity.id, data}
-      end)
-      |> Map.new()
-
-    zombies =
-      ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Zombie)
-      |> Enum.map(fn entity ->
-        %{x: position_x, y: position_y} = entity.components.position.state
-        %{size: size_size} = entity.components.size.state
-
-        data = %{
-          x: position_x,
-          y: position_y,
-          size: size_size
-        }
-
-        {entity.id, data}
-      end)
-      |> Map.new()
-
-    %{
-      game_id: game_id,
-      players: players,
-      projectiles: projectiles,
-      walls: walls,
-      zombies: zombies
-    }
-  end
-
-  def process_input_events(game_id) do
-    events = ECS.Queue.pop_all(game_id, :input) |> Enum.reverse()
-
-    Enum.map(events, fn event ->
-      Tanks.Game.EventProcessor.process_event(game_id, event)
-    end)
-  end
-
-  def process_internal_events(game_id) do
-    events = ECS.Queue.pop_all(game_id, :internal) |> Enum.reverse()
-
-    Enum.map(events, fn event ->
-      Tanks.Game.EventProcessor.process_event(game_id, event)
-    end)
-  end
 end

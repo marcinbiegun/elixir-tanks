@@ -9,10 +9,10 @@ defmodule Tanks.Game.ServerSupervisor do
     DynamicSupervisor.init(strategy: :one_for_one)
   end
 
-  def start_game_server(game_id) do
+  def start_game_server(game_id, opts \\ []) do
     child_spec = %{
       id: game_id,
-      start: {Tanks.Game.Server, :start_link, [game_id]},
+      start: {Tanks.Game.Server, :start_link, [game_id, opts]},
       restart: :transient
     }
 

@@ -3,8 +3,8 @@ defmodule Tanks.GameServer do
   High level functions for operations on game servers.
   """
 
-  def create(game_id) do
-    Tanks.Game.ServerSupervisor.start_game_server(game_id)
+  def create(game_id, opts \\ []) do
+    Tanks.Game.ServerSupervisor.start_game_server(game_id, opts)
   end
 
   def get(game_id) do
@@ -17,6 +17,10 @@ defmodule Tanks.GameServer do
 
   def delete(game_id) do
     Tanks.Game.Server.stop(game_id)
+  end
+
+  def spawn_level(game_id) do
+    Tanks.Game.Server.spawn_level(game_id)
   end
 
   def join_player(game_id, token) do
