@@ -6,6 +6,32 @@ defmodule Tanks.GameECS do
   # TODO: Use registers https://hexdocs.pm/elixir/Registry.html
   # {:error, {:already_started, #PID<0.371.0>}}
   # {:ok, pid}
+
+  def add_entity(entity, game_id) do
+    ECS.Registry.ComponentTuple.put_entity(game_id, entity)
+    ECS.Registry.Entity.put(game_id, entity)
+
+    entity.components
+    |> Enum.each(fn {_key, component} ->
+      ECS.Registry.Component.put(game_id, component.__struct__, component.pid)
+    end)
+
+    entity
+  end
+
+  def remove_entity(entity, game_id) do
+    ECS.Registry.ComponentTuple.remove_entity(game_id, entity)
+    ECS.Registry.Entity.remove(game_id, entity.__struct__, entity.id)
+
+    entity.components
+    |> Enum.each(fn {_key, component} ->
+      ECS.Registry.Component.remove(game_id, component.__struct__, component.pid)
+      ECS.Component.Agent.stop(component.pid)
+    end)
+
+    entity
+  end
+
   def start(game_id) do
     start_registers(game_id)
     register_systems(game_id)

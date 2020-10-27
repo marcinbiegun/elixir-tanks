@@ -17,7 +17,7 @@ defmodule Tanks.Game.IntegrationTest do
     test "getting entity by ID" do
       player =
         Tanks.Game.Entity.Player.new()
-        |> Tanks.Game.Ops.add_entity(@game_id)
+        |> Tanks.Game.GameECS.add_entity(@game_id)
 
       fetched_player = ECS.Registry.Entity.get(@game_id, Tanks.Game.Entity.Player, player.id)
 
@@ -30,7 +30,7 @@ defmodule Tanks.Game.IntegrationTest do
     test "creating and reloading entities" do
       player =
         Tanks.Game.Entity.Player.new()
-        |> Tanks.Game.Ops.add_entity(@game_id)
+        |> Tanks.Game.GameECS.add_entity(@game_id)
 
       assert player.__struct__ == Tanks.Game.Entity.Player
       assert player.components.position.__struct__ == Tanks.Game.Components.Position
@@ -46,11 +46,11 @@ defmodule Tanks.Game.IntegrationTest do
     test "getting list of all entites of a given type" do
       projectile1 =
         Tanks.Game.Entity.Projectile.new(0, 0, 1, 0)
-        |> Tanks.Game.Ops.add_entity(@game_id)
+        |> Tanks.Game.GameECS.add_entity(@game_id)
 
       projectile2 =
         Tanks.Game.Entity.Projectile.new(10, 10, 0, 1)
-        |> Tanks.Game.Ops.add_entity(@game_id)
+        |> Tanks.Game.GameECS.add_entity(@game_id)
 
       [fetched_projectile1, fetched_projectile2] =
         ECS.Registry.Entity.all(@game_id, Tanks.Game.Entity.Projectile)
@@ -65,7 +65,7 @@ defmodule Tanks.Game.IntegrationTest do
     test "projectile movement" do
       projectile =
         Tanks.Game.Entity.Projectile.new(0, 0, 1, 2)
-        |> Tanks.Game.Ops.add_entity(@game_id)
+        |> Tanks.Game.GameECS.add_entity(@game_id)
 
       assert projectile.components.position.state.x == 0
       assert projectile.components.position.state.y == 0
@@ -89,7 +89,7 @@ defmodule Tanks.Game.IntegrationTest do
     test "player control" do
       player =
         Tanks.Game.Entity.Player.new()
-        |> Tanks.Game.Ops.add_entity(@game_id)
+        |> Tanks.Game.GameECS.add_entity(@game_id)
 
       assert player.components.control.state.right == false
 
@@ -115,7 +115,7 @@ defmodule Tanks.Game.IntegrationTest do
 
       projectile =
         Tanks.Game.Entity.Projectile.new(0, 0, 0, 0, lifetime)
-        |> Tanks.Game.Ops.add_entity(@game_id)
+        |> Tanks.Game.GameECS.add_entity(@game_id)
 
       projectile_id = projectile.id
 
@@ -140,13 +140,13 @@ defmodule Tanks.Game.IntegrationTest do
     test "projectile vs wall collision" do
       projectile =
         Tanks.Game.Entity.Projectile.new(0, 0, 0, 0)
-        |> Tanks.Game.Ops.add_entity(@game_id)
+        |> Tanks.Game.GameECS.add_entity(@game_id)
 
       projectile_id = projectile.id
 
       _wall =
         Tanks.Game.Entity.Wall.new(0, 0)
-        |> Tanks.Game.Ops.add_entity(@game_id)
+        |> Tanks.Game.GameECS.add_entity(@game_id)
 
       Tanks.Game.System.Collision.process(@game_id)
 
@@ -161,13 +161,13 @@ defmodule Tanks.Game.IntegrationTest do
     test "projectile vs zombie projectile collision" do
       projectile =
         Tanks.Game.Entity.Projectile.new(0, 0, 0, 0)
-        |> Tanks.Game.Ops.add_entity(@game_id)
+        |> Tanks.Game.GameECS.add_entity(@game_id)
 
       projectile_id = projectile.id
 
       zombie =
         Tanks.Game.Entity.Zombie.new(0, 0)
-        |> Tanks.Game.Ops.add_entity(@game_id)
+        |> Tanks.Game.GameECS.add_entity(@game_id)
 
       zombie_id = zombie.id
 
@@ -193,7 +193,7 @@ defmodule Tanks.Game.IntegrationTest do
 
       projectile =
         Tanks.Game.Entity.Projectile.new(0, 0, 0, 0)
-        |> Tanks.Game.Ops.add_entity(@game_id)
+        |> Tanks.Game.GameECS.add_entity(@game_id)
 
       projectile_size = projectile.components.size.state.size
       assert [] == Tanks.Game.Cache.Position.colliding_entities(@game_id, 0, 0, 10)

@@ -33,7 +33,7 @@ defmodule Tanks.Game.EventProcessor do
         )
 
       entity ->
-        Tanks.Game.Ops.remove_entity(game_id, entity)
+        Tanks.GameECS.remove_entity(entity, game_id)
     end
   end
 

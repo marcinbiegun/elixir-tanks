@@ -78,32 +78,32 @@ defmodule Tanks.Game.Server do
 
     # player =
     #   Tanks.Game.Entity.Player.new()
-    #   |> Tanks.Game.Ops.add_entity(game_id)
+    #   |> Tanks.Game.GameECS.add_entity(game_id)
 
     # Enum.each(1..8, fn i ->
     #   Tanks.Game.Entity.Wall.new(150, 100 + i * 50)
-    #   |> Tanks.Game.Ops.add_entity(game_id)
+    #   |> Tanks.Game.GameECS.add_entity(game_id)
     # end)
 
     # Enum.each(1..8, fn i ->
     #   Tanks.Game.Entity.Wall.new(550, 100 + i * 50)
-    #   |> Tanks.Game.Ops.add_entity(game_id)
+    #   |> Tanks.Game.GameECS.add_entity(game_id)
     # end)
 
     # Tanks.Game.Entity.Zombie.new(250, 250)
-    # |> Tanks.Game.Ops.add_entity(game_id)
+    # |> Tanks.Game.GameECS.add_entity(game_id)
 
     # Tanks.Game.Entity.Zombie.new(270, 250)
-    # |> Tanks.Game.Ops.add_entity(game_id)
+    # |> Tanks.Game.GameECS.add_entity(game_id)
 
     # Tanks.Game.Entity.Zombie.new(250, 270)
-    # |> Tanks.Game.Ops.add_entity(game_id)
+    # |> Tanks.Game.GameECS.add_entity(game_id)
 
     # Tanks.Game.Entity.Zombie.new(290, 250)
-    # |> Tanks.Game.Ops.add_entity(game_id)
+    # |> Tanks.Game.GameECS.add_entity(game_id)
 
     # Tanks.Game.Entity.Zombie.new(250, 290)
-    # |> Tanks.Game.Ops.add_entity(game_id)
+    # |> Tanks.Game.GameECS.add_entity(game_id)
 
     # TODO: should use after_init
     # {:ok, %{@initial_state | game_id: game_id, player_id: player.id}}
@@ -156,7 +156,7 @@ defmodule Tanks.Game.Server do
   def handle_call({:join_player, player_token}, _from, %{game_id: game_id} = state) do
     player =
       Tanks.Game.Entity.Player.new()
-      |> Tanks.Game.Ops.add_entity(game_id)
+      |> Tanks.Game.GameECS.add_entity(game_id)
 
     player = %{id: player.id, token: player_token}
 
@@ -190,7 +190,7 @@ defmodule Tanks.Game.Server do
       velocity_y * @projectile_speed,
       2000
     )
-    |> Tanks.Game.Ops.add_entity(game_id)
+    |> Tanks.Game.GameECS.add_entity(game_id)
 
     {:noreply, state}
   end
