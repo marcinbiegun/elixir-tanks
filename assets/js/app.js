@@ -38,15 +38,17 @@ if (gameEl != null && gameId != null) {
 
   // Connect to game
   channel.join().receive("ok", (responsePayload) => {
-    console.log(responsePayload, `ok response on channel join ${channelId}`);
+    console.log("Connected to channel ${channelId}");
+    console.log("Player ID " + responsePayload.player_id);
+
     consoleAppend(responsePayload.msg);
-    console.log("Setting player ID " + responsePayload.player_id);
+
     document.playerId = responsePayload.player_id;
+    document.initState = responsePayload.init_state;
 
     // Initialize systems
     initInput();
     initGame(gameEl);
-    console.log("Connected to game " + gameId);
   });
 
   // Setup state sync

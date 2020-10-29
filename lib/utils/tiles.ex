@@ -1,4 +1,4 @@
-defmodule Utils.Board do
+defmodule Utils.Tiles do
   @moduledoc """
   `{x, y} = {0, 0}` is top right
   positive `x` means going down

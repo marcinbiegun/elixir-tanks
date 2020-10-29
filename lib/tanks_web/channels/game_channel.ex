@@ -7,12 +7,22 @@ defmodule TanksWeb.GameChannel do
     # Join game server
     {response, socket} =
       with {:ok, server} <- Tanks.GameServer.get(game_id),
-           {:ok, player} <- Tanks.GameServer.join_player(game_id, player_token) do
+           {:ok, player} <- Tanks.GameServer.join_player(game_id, player_token),
+           {:ok, init_state} <- Tanks.GameServer.init_state(game_id) do
         socket = assign(socket, :current_server, %{game_id: server.game_id, player_id: player.id})
-        {%{game_id: server.game_id, player_id: player.id, msg: "Joined game #{game_id}"}, socket}
+
+        response = %{
+          game_id: server.game_id,
+          player_id: player.id,
+          msg: "Joined game #{game_id}",
+          init_state: init_state
+        }
+
+        {response, socket}
       else
         error ->
-          {%{msg: "Unable to join game #{game_id}: #{inspect(error)}"}, socket}
+          response = %{msg: "Unable to join game #{game_id}: #{inspect(error)}"}
+          {response, socket}
       end
 
     # Respond

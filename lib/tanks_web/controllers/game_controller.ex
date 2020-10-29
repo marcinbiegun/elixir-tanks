@@ -13,8 +13,8 @@ defmodule TanksWeb.GameController do
 
   def create(conn, _params) do
     game_id = Utils.Crypto.random_id()
-    Tanks.GameServer.create(game_id)
-    Tanks.GameServer.spawn_level(game_id)
+    level = 1
+    Tanks.GameServer.create(game_id, level)
     conn |> redirect(to: "/games") |> halt()
   end
 

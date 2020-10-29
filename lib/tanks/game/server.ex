@@ -14,8 +14,12 @@ defmodule Tanks.Game.Server do
 
   # API
 
-  def start_link(game_id, opts \\ []) do
-    GenServer.start_link(__MODULE__, {game_id, opts}, name: name(game_id))
+  def start_link(game_id, level, opts \\ []) do
+    GenServer.start_link(__MODULE__, {game_id, level, opts}, name: name(game_id))
+  end
+
+  def init_state(game_id) do
+    GenServer.call(name(game_id), :init_state)
   end
 
   def state(game_id) do
@@ -67,20 +71,22 @@ defmodule Tanks.Game.Server do
     GenServer.call(name(game_id), {:join_player, token})
   end
 
-  def spawn_level(game_id) do
-    GenServer.call(name(game_id), {:spawn_level})
-  end
-
   # Callbacks
 
-  def init({game_id, opts}) do
+  def init({game_id, level, opts}) do
     Logger.info("Starting game server #{__MODULE__} #{game_id} whith ipts #{inspect(opts)}")
+
+    Tanks.GameECS.start(game_id)
 
     if Keyword.get(opts, :no_tick) != true do
       Process.send_after(self(), :tick, @tickms)
     end
 
-    Tanks.GameECS.start(game_id)
+    case level do
+      1 ->
+        Tanks.Game.Content.Level.create_level_entities()
+        |> Enum.map(&Tanks.GameECS.add_entity(&1, game_id))
+    end
 
     {:ok, %{@initial_state | game_id: game_id}}
   end
@@ -95,11 +101,8 @@ defmodule Tanks.Game.Server do
     {:noreply, %{state | tick: tick + 1}}
   end
 
-  def handle_call({:spawn_level}, _from, %{game_id: game_id} = state) do
-    Tanks.Game.Content.Level.create_level_entities()
-    |> Enum.map(&Tanks.GameECS.add_entity(&1, game_id))
-
-    {:reply, :ok, state}
+  def handle_call(:init_state, _from, %{game_id: game_id} = state) do
+    {:reply, {:ok, Impl.build_init_state(game_id)}, state}
   end
 
   def handle_call(:state, _from, state) do

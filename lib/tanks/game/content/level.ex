@@ -18,6 +18,9 @@ defmodule Tanks.Game.Content.Level do
       Tanks.Game.Entity.Zombie.new(250, 290)
     ]
 
-    walls1 ++ walls2 ++ zombies
+    tiles = Tanks.Game.Content.Dungeon.generate_tiles()
+    boards = [Tanks.Game.Entity.Board.new(tiles)]
+
+    walls1 ++ walls2 ++ zombies ++ boards
   end
 end

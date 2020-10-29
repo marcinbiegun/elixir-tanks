@@ -6,6 +6,10 @@ const FILES = {
   projectile: "/images/projectile_blue.png",
   wall: "/images/wall_16.png",
   zombie: "/images/zombie1_hold.png",
+  tiles: {
+    empty: "/images/tiles/empty.png",
+    wall: "/images/tiles/wall.png",
+  },
 };
 
 const addStatsText = (app) => {
@@ -181,6 +185,27 @@ const updateZombies = (app, zombies, data) => {
   return zombies;
 };
 
+// Draw Tiles
+const drawTiles = (app, tiles) => {
+  let createdSprites = [];
+  let size = 32;
+
+  for (let x = 0; x < tiles.length; x++) {
+    for (let y = 0; y < tiles[x].length; y++) {
+      console.log("Creating tile");
+      const tile = tiles[x][y];
+      let texture = PIXI.Texture.from(FILES.tiles[tile]);
+      let sprite = new PIXI.Sprite(texture);
+      sprite.x = x * size;
+      sprite.y = y * size;
+      app.stage.addChild(sprite);
+      createdSprites.push(sprite);
+    }
+  }
+
+  return createdSprites;
+};
+
 export const init = (gameEl) => {
   // Init app
   const app = new PIXI.Application({
@@ -201,6 +226,8 @@ export const init = (gameEl) => {
     players: {},
     zombies: {},
   };
+
+  const tiles = drawTiles(app, document.initState.tiles);
 
   // Listen for animate update
   app.ticker.add((delta) => {

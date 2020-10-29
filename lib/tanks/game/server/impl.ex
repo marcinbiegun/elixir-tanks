@@ -20,6 +20,19 @@ defmodule Tanks.Game.Server.Impl do
     {:ok, client_state, took_ms}
   end
 
+  def build_init_state(game_id) do
+    tiles =
+      case(ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Board) |> Enum.at(0)) do
+        nil ->
+          []
+
+        board_entity ->
+          board_entity.components.tiles.state.tiles
+      end
+
+    %{tiles: tiles}
+  end
+
   def build_client_state(game_id) do
     players =
       ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Player)
