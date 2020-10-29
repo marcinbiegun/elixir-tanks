@@ -1,17 +1,22 @@
 # Tanks
 
-This is an experiment to test how ECS architecture works in a small but real life scenario.
+This is an experiment to test how ECS architecture works in a real life scenario.
+
+## Asset packs
+
+- https://www.kenney.nl/assets/topdown-shooter
+- https://www.kenney.nl/assets/topdown-tanks-redux
 
 ## Implementation details
 
-Processes:
+### Processes
 
 - Components
 - Registers
 - Servers
 - Cache
 
-System logic:
+### System logic
 
 - Components are registered with their own processes
 - Entities are only groups of components, they don't have their own
