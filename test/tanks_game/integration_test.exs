@@ -2,13 +2,14 @@ defmodule Tanks.Game.IntegrationTest do
   use ExUnit.Case
 
   @game_id 123
+  @level nil
 
   setup do
     on_exit(fn ->
       Tanks.GameServer.delete(@game_id)
     end)
 
-    Tanks.GameServer.create(@game_id, no_tick: true)
+    Tanks.GameServer.create(@game_id, @level, no_tick: true)
 
     %{game_id: @game_id}
   end
@@ -85,7 +86,6 @@ defmodule Tanks.Game.IntegrationTest do
   end
 
   describe "control system" do
-    @tag :dev
     test "player control" do
       player =
         Tanks.Game.Entity.Player.new()
@@ -189,7 +189,6 @@ defmodule Tanks.Game.IntegrationTest do
   end
 
   describe "position cache" do
-    @tag :dev
     test "detecting collisions" do
       assert [] == Tanks.Game.Cache.Position.colliding_entities(@game_id, 0, 0, 10)
 

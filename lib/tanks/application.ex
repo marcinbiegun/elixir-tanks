@@ -19,7 +19,6 @@ defmodule Tanks.Application do
       #
       ## Our processes
       %{id: ECS.Registry.Id, start: {ECS.Registry.Id, :start, []}},
-      # {ECS.Registry.Id, {ECS.Registry.Id, :start, []}},
       {Tanks.Game.ServerSupervisor, []},
       {Registry, [keys: :unique, name: Registry.Tanks.Game.Server]},
       {Registry, [keys: :unique, name: Registry.ECS.Registry.Component]},

@@ -86,6 +86,9 @@ defmodule Tanks.Game.Server do
       1 ->
         Tanks.Game.Content.Level.create_level_entities()
         |> Enum.map(&Tanks.GameECS.add_entity(&1, game_id))
+
+      _ ->
+        :noop
     end
 
     {:ok, %{@initial_state | game_id: game_id}}
