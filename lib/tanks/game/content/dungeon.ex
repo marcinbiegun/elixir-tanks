@@ -7,8 +7,9 @@ defmodule Tanks.Game.Content.Dungeon do
 
   def generate_tiles do
     board = Tiles.new(50, 50, :empty)
-    board = Tiles.box(board, 10, 10, 5, 5, :wall)
-    board = Tiles.box(board, 10, 30, 5, 5, :wall)
+    board = Tiles.box(board, 10, 10, 1, 1, :wall)
+    # board = Tiles.box(board, 12, 10, 2, 2, :wall)
+    # board = Tiles.box(board, 15, 10, 3, 3, :wall)
     board
   end
 end

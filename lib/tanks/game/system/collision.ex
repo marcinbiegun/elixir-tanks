@@ -17,9 +17,15 @@ defmodule Tanks.Game.System.Collision do
   def component_types, do: @component_types
 
   def process(game_id) do
-    component_tuples(game_id)
-    |> Enum.map(fn tuple -> build(tuple, :move) end)
-    |> detect(game_id)
+    tuples =
+      component_tuples(game_id)
+      |> Enum.map(fn tuple -> build(tuple, :move) end)
+
+    tuples
+    |> detect_size_collisions(game_id)
+
+    tuples
+    |> detect_boards_collisions(game_id)
   end
 
   defp build({entity_type, entity_id, {position_pid, size_pid}}, :move) do
@@ -29,7 +35,7 @@ defmodule Tanks.Game.System.Collision do
     {entity_type, entity_id, pos_x, pos_y, size}
   end
 
-  defp detect(collidables, game_id) do
+  defp detect_size_collisions(collidables, game_id) do
     Utils.Combinatorics.combinations(collidables, 2)
     |> Enum.map(fn collidables_pair ->
       collidables_pair |> Enum.sort_by(&elem(&1, 0))
@@ -53,6 +59,36 @@ defmodule Tanks.Game.System.Collision do
           other_entity_type,
           other_entity_id
         )
+      end
+    end)
+  end
+
+  # TODO: move to config module
+  @board_entity_type Tanks.Game.Entity.Board
+  @board_tile_size 32
+  @board_collidables [:wall]
+
+  defp detect_boards_collisions(collidables, game_id) do
+    ECS.Registry.Entity.all(game_id, @board_entity_type)
+    |> Enum.map(fn board ->
+      detect_board_collisions(collidables, board, game_id)
+    end)
+  end
+
+  defp detect_board_collisions(collidables, board, game_id) do
+    tiles = board.components.tiles.state.tiles
+
+    collidables
+    |> Enum.map(fn {entity_type, entity_id, pos_x, pos_y, size} ->
+      if Utils.TilesComp.collides?(
+           tiles,
+           @board_tile_size,
+           @board_collidables,
+           pos_x,
+           pos_y,
+           size
+         ) do
+        resolve_board_collision(game_id, board, entity_type, entity_id)
       end
     end)
   end
@@ -98,6 +134,18 @@ defmodule Tanks.Game.System.Collision do
   end
 
   def resolve_collision(_, _, _, _), do: :ok
+
+  def resolve_board_collision(game_id, _board, Tanks.Game.Entity.Projectile, projectile_id) do
+    destroy_projectile_event =
+      Tanks.Game.Event.Destroy.new(
+        Tanks.Game.Entity.Projectile,
+        projectile_id
+      )
+
+    ECS.Queue.put(game_id, :internal, destroy_projectile_event)
+  end
+
+  def resolve_board_collision(_, _, _, _), do: :ok
 
   defp component_tuples(game_id) do
     id = ECS.Registry.ComponentTuple.build_registry_id(@component_types)

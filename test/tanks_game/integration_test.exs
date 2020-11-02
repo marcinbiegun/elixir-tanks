@@ -186,6 +186,42 @@ defmodule Tanks.Game.IntegrationTest do
                }
              ] = ECS.Queue.get(@game_id, :internal) |> Enum.sort_by(& &1.entity_module)
     end
+
+    test "projectile vs board tile collision" do
+      projectile =
+        Tanks.Game.Entity.Projectile.new(0, 0, 0, 0)
+        |> Tanks.GameECS.add_entity(@game_id)
+
+      projectile_id = projectile.id
+
+      tile_size = 32
+
+      tiles = [
+        [:empty, :empty, :empty],
+        [:empty, :wall, :empty],
+        [:empty, :empty, :empty]
+      ]
+
+      _board =
+        Tanks.Game.Entity.Board.new(tiles)
+        |> Tanks.GameECS.add_entity(@game_id)
+
+      Tanks.Game.System.Collision.process(@game_id)
+
+      assert [] == ECS.Queue.get(@game_id, :internal)
+
+      new_position = %{x: tile_size, y: tile_size}
+      ECS.Component.update(projectile.components.position.pid, new_position)
+
+      Tanks.Game.System.Collision.process(@game_id)
+
+      assert [
+               %Tanks.Game.Event.Destroy{
+                 entity_id: ^projectile_id,
+                 entity_module: Tanks.Game.Entity.Projectile
+               }
+             ] = ECS.Queue.get(@game_id, :internal)
+    end
   end
 
   describe "position cache" do

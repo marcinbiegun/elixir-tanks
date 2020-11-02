@@ -3,6 +3,11 @@ defmodule Tanks.Game.System.Movement do
   alias Tanks.Game.Components.Control
   alias Tanks.Game.Components.Size
 
+  # TODO: move to config module
+  @board_entity_type Tanks.Game.Entity.Board
+  @board_tile_size 32
+  @board_collidables [:wall]
+
   @component_types [Control, Position, Size]
   def component_types, do: @component_types
 
@@ -18,51 +23,78 @@ defmodule Tanks.Game.System.Movement do
     %{down: down, left: left, right: right, up: up, speed: speed} =
       ECS.Component.get_state(control_pid)
 
+    boards = ECS.Registry.Entity.all(game_id, @board_entity_type)
+
     new_position =
       position
-      |> try_move(game_id, :down, down, speed, size, entity_id)
-      |> try_move(game_id, :left, left, speed, size, entity_id)
-      |> try_move(game_id, :right, right, speed, size, entity_id)
-      |> try_move(game_id, :up, up, speed, size, entity_id)
+      |> try_move(game_id, boards, :down, down, speed, size, entity_id)
+      |> try_move(game_id, boards, :left, left, speed, size, entity_id)
+      |> try_move(game_id, boards, :right, right, speed, size, entity_id)
+      |> try_move(game_id, boards, :up, up, speed, size, entity_id)
 
     if position != new_position, do: ECS.Component.update(position_pid, new_position)
   end
 
-  defp try_move(position, _game_id, _direction, false, _speed, _size, _entity_id), do: position
-  defp try_move(position, _game_id, _direction, _move?, 0, _size, _entity_id), do: position
+  defp try_move(position, _game_id, _boards, _direction, false, _speed, _size, _entity_id),
+    do: position
 
-  defp try_move(position, game_id, :down, true, speed, size, entity_id) do
+  defp try_move(position, _game_id, _boards, _direction, _move?, 0, _size, _entity_id),
+    do: position
+
+  defp try_move(position, game_id, boards, :down, true, speed, size, entity_id) do
     new_position = %{position | y: position.y + speed}
-    validate_position(game_id, position, new_position, size, entity_id)
+    validate_position(game_id, boards, position, new_position, size, entity_id)
   end
 
-  defp try_move(position, game_id, :left, true, speed, size, entity_id) do
+  defp try_move(position, game_id, boards, :left, true, speed, size, entity_id) do
     new_position = %{position | x: position.x - speed}
-    validate_position(game_id, position, new_position, size, entity_id)
+    validate_position(game_id, boards, position, new_position, size, entity_id)
   end
 
-  defp try_move(position, game_id, :right, true, speed, size, entity_id) do
+  defp try_move(position, game_id, boards, :right, true, speed, size, entity_id) do
     new_position = %{position | x: position.x + speed}
-    validate_position(game_id, position, new_position, size, entity_id)
+    validate_position(game_id, boards, position, new_position, size, entity_id)
   end
 
-  defp try_move(position, game_id, :up, true, speed, size, entity_id) do
+  defp try_move(position, game_id, boards, :up, true, speed, size, entity_id) do
     new_position = %{position | y: position.y - speed}
-    validate_position(game_id, position, new_position, size, entity_id)
+    validate_position(game_id, boards, position, new_position, size, entity_id)
   end
 
-  defp validate_position(game_id, old_position, new_position, size, entity_id) do
-    if Tanks.Game.Cache.Position.colliding_entities(
-         game_id,
-         new_position.x,
-         new_position.y,
-         size,
-         entity_id
-       ) == [] do
-      new_position
-    else
-      old_position
+  defp validate_position(game_id, boards, old_position, new_position, size, entity_id) do
+    cond do
+      Tanks.Game.Cache.Position.colliding_entities(
+        game_id,
+        new_position.x,
+        new_position.y,
+        size,
+        entity_id
+      ) != [] ->
+        old_position
+
+      boards_collision?(boards, new_position, size) == true ->
+        old_position
+
+      true ->
+        new_position
     end
+  end
+
+  defp boards_collision?(boards, new_position, size) do
+    Enum.any?(boards, &board_collision?(&1, new_position, size))
+  end
+
+  defp board_collision?(board, new_position, size) do
+    tiles = board.components.tiles.state.tiles
+
+    Utils.TilesComp.collides?(
+      tiles,
+      @board_tile_size,
+      @board_collidables,
+      new_position.x,
+      new_position.y,
+      size
+    )
   end
 
   defp component_tuples(game_id) do

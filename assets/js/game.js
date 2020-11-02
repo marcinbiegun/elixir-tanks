@@ -2,6 +2,10 @@ import * as PIXI from "pixi.js";
 import { isObject, wrap } from "lodash";
 import { Viewport } from "pixi-viewport";
 
+const CONFIG = {
+  tileSize: 32,
+};
+
 const FILES = {
   player: "/images/bunny.png",
   projectile: "/images/projectile_blue.png",
@@ -89,15 +93,14 @@ const updateSprites = (viewport, sprites, data, imgUrl) => {
 // Draw Tiles
 const drawTiles = (app, tiles) => {
   let createdSprites = [];
-  let size = 32;
 
   for (let x = 0; x < tiles.length; x++) {
     for (let y = 0; y < tiles[x].length; y++) {
       const tile = tiles[x][y];
       let texture = PIXI.Texture.from(FILES.tiles[tile]);
       let sprite = new PIXI.Sprite(texture);
-      sprite.x = x * size;
-      sprite.y = y * size;
+      sprite.x = x * CONFIG.tileSize;
+      sprite.y = y * CONFIG.tileSize;
       app.addChild(sprite);
       createdSprites.push(sprite);
     }

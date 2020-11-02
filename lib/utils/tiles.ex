@@ -25,6 +25,6 @@ defmodule Utils.Tiles do
   end
 
   def get(board, x, y) do
-    Enum.at(board, x) |> Enum.at(y)
+    Enum.at(board, x, []) |> Enum.at(y, nil)
   end
 end
