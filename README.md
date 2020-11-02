@@ -2,6 +2,11 @@
 
 This is an experiment to test how ECS architecture works in a real life scenario.
 
+## TODO
+
+- [] proper modules order
+- [] handle components / entities crashes
+
 ## Asset packs
 
 - https://www.kenney.nl/assets/topdown-shooter
