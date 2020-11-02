@@ -1,5 +1,6 @@
 import * as PIXI from "pixi.js";
-import { isObject } from "lodash";
+import { isObject, wrap } from "lodash";
+import { Viewport } from "pixi-viewport";
 
 const FILES = {
   player: "/images/bunny.png",
@@ -24,8 +25,9 @@ const addStatsText = (app) => {
 const onClick = (event) => {
   const sourceX = document.state.players[document.playerId].x;
   const sourceY = document.state.players[document.playerId].y;
-  const targetX = event.data.global.x;
-  const targetY = event.data.global.y;
+
+  const targetX = event.world.x;
+  const targetY = event.world.y;
 
   const dx = targetX - sourceX;
   const dy = targetY - sourceY;
@@ -55,134 +57,33 @@ const wrapWithSizeCircle = (object, size) => {
   return container;
 };
 
-// Draw projectiles
-const updateProjectiles = (app, projectiles, data) => {
-  for (const [id, projectile] of Object.entries(data)) {
-    // Update projectile
-    if (projectiles[id] != null) {
-      projectiles[id].x = projectile.x;
-      projectiles[id].y = projectile.y;
-      // Create projectile
-    } else {
-      const texture = PIXI.Texture.from(FILES.projectile);
-      const newPixiProjectile = new PIXI.Sprite(texture);
-      newPixiProjectile.pivot.x = newPixiProjectile.width / 2;
-      newPixiProjectile.pivot.y = newPixiProjectile.height / 2;
-      app.stage.addChild(newPixiProjectile);
-      projectiles[id] = newPixiProjectile;
-      projectiles[id].x = projectile.x;
-      projectiles[id].y = projectile.y;
-    }
-  }
-
-  for (const [id, sprite] of Object.entries(projectiles)) {
-    // Delete projectile
-    if (data[id] == null) {
-      projectiles[id].destroy();
-      delete projectiles[id];
-    }
-  }
-
-  return projectiles;
-};
-
-// Draw walls
-const updateWalls = (app, walls, data) => {
-  for (const [id, wall] of Object.entries(data)) {
+const updateSprites = (viewport, sprites, data, imgUrl) => {
+  for (const [id, object] of Object.entries(data)) {
     // Update
-    if (walls[id] != null) {
-      walls[id].x = wall.x;
-      walls[id].y = wall.y;
+    if (sprites[id] != null) {
+      sprites[id].position.set(object.x, object.y);
       // Create
     } else {
-      console.log("Creating wall");
-      let texture = PIXI.Texture.from(FILES.wall);
+      const texture = PIXI.Texture.from(imgUrl);
       let sprite = new PIXI.Sprite(texture);
       sprite.pivot.x = sprite.width / 2;
       sprite.pivot.y = sprite.height / 2;
-      sprite = wrapWithSizeCircle(sprite, wall.size);
-      app.stage.addChild(sprite);
-      walls[id] = sprite;
-      walls[id].x = wall.x;
-      walls[id].y = wall.y;
+      sprite = wrapWithSizeCircle(sprite, object.size);
+      viewport.addChild(sprite);
+      sprites[id] = sprite;
+      sprites[id].position.set(object.x, object.y);
     }
   }
 
-  for (const [id, sprite] of Object.entries(walls)) {
-    // Delete
+  // Delete
+  for (const [id, sprite] of Object.entries(sprites)) {
     if (data[id] == null) {
-      walls[id].destroy();
-      delete walls[id];
+      sprites[id].destroy();
+      delete sprites[id];
     }
   }
 
-  return walls;
-};
-
-// Draw players
-const updatePlayers = (app, players, data) => {
-  for (const [id, player] of Object.entries(data)) {
-    // Update
-    if (players[id] != null) {
-      players[id].x = player.x;
-      players[id].y = player.y;
-      // Create
-    } else {
-      console.log("Creating player");
-      let texture = PIXI.Texture.from(FILES.player);
-      let sprite = new PIXI.Sprite(texture);
-      sprite.pivot.x = 12;
-      sprite.pivot.y = 20;
-      sprite = wrapWithSizeCircle(sprite, player.size);
-      app.stage.addChild(sprite);
-      players[id] = sprite;
-      players[id].x = player.x;
-      players[id].y = player.y;
-    }
-  }
-
-  for (const [id, sprite] of Object.entries(players)) {
-    // Delete
-    if (data[id] == null) {
-      players[id].destroy();
-      delete players[id];
-    }
-  }
-
-  return players;
-};
-
-// Draw zombies
-const updateZombies = (app, zombies, data) => {
-  for (const [id, zombie] of Object.entries(data)) {
-    // Update
-    if (zombies[id] != null) {
-      zombies[id].x = zombie.x;
-      zombies[id].y = zombie.y;
-      // Create
-    } else {
-      console.log("Creating zombie");
-      let texture = PIXI.Texture.from(FILES.zombie);
-      let sprite = new PIXI.Sprite(texture);
-      sprite.pivot.x = sprite.width / 2;
-      sprite.pivot.y = sprite.height / 2;
-      sprite = wrapWithSizeCircle(sprite, zombie.size);
-      app.stage.addChild(sprite);
-      zombies[id] = sprite;
-      zombies[id].x = zombie.x;
-      zombies[id].y = zombie.y;
-    }
-  }
-
-  for (const [id, sprite] of Object.entries(zombies)) {
-    // Delete
-    if (data[id] == null) {
-      zombies[id].destroy();
-      delete zombies[id];
-    }
-  }
-
-  return zombies;
+  return sprites;
 };
 
 // Draw Tiles
@@ -192,13 +93,12 @@ const drawTiles = (app, tiles) => {
 
   for (let x = 0; x < tiles.length; x++) {
     for (let y = 0; y < tiles[x].length; y++) {
-      console.log("Creating tile");
       const tile = tiles[x][y];
       let texture = PIXI.Texture.from(FILES.tiles[tile]);
       let sprite = new PIXI.Sprite(texture);
       sprite.x = x * size;
       sprite.y = y * size;
-      app.stage.addChild(sprite);
+      app.addChild(sprite);
       createdSprites.push(sprite);
     }
   }
@@ -207,13 +107,30 @@ const drawTiles = (app, tiles) => {
 };
 
 export const init = (gameEl) => {
+  const screenWidth = 800;
+  const screenHeight = 600;
+
   // Init app
   const app = new PIXI.Application({
-    width: 800,
-    height: 600,
+    width: screenWidth,
+    height: screenHeight,
     backgroundColor: 0x1099bb,
     resolution: window.devicePixelRatio || 1,
   });
+
+  // Viewport
+  const viewport = new Viewport({
+    screenWidth: screenWidth,
+    screenHeight: screenHeight,
+    worldWidth: 1000,
+    worldHeight: 1000,
+
+    interaction: app.renderer.plugins.interaction, // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
+  });
+
+  app.stage.addChild(viewport);
+
+  viewport.wheel();
 
   gameEl.appendChild(app.view);
 
@@ -227,7 +144,11 @@ export const init = (gameEl) => {
     zombies: {},
   };
 
-  const tiles = drawTiles(app, document.initState.tiles);
+  // Add camera target
+  const cameraTarget = new PIXI.Point(100, 200);
+  viewport.follow(cameraTarget);
+
+  const tiles = drawTiles(viewport, document.initState.tiles);
 
   // Listen for animate update
   app.ticker.add((delta) => {
@@ -236,14 +157,35 @@ export const init = (gameEl) => {
       return;
     }
 
-    db.players = updatePlayers(app, db.players, document.state.players);
-    db.projectiles = updateProjectiles(
-      app,
-      db.projectiles,
-      document.state.projectiles
+    if (db.players[document.playerId] != null) {
+      cameraTarget.x = db.players[document.playerId].x;
+      cameraTarget.y = db.players[document.playerId].y;
+    }
+
+    db.players = updateSprites(
+      viewport,
+      db.players,
+      document.state.players,
+      FILES.player
     );
-    db.walls = updateWalls(app, db.walls, document.state.walls);
-    db.zombies = updateZombies(app, db.zombies, document.state.zombies);
+    db.projectiles = updateSprites(
+      viewport,
+      db.projectiles,
+      document.state.projectiles,
+      FILES.projectile
+    );
+    db.walls = updateSprites(
+      viewport,
+      db.walls,
+      document.state.walls,
+      FILES.wall
+    );
+    db.zombies = updateSprites(
+      viewport,
+      db.zombies,
+      document.state.zombies,
+      FILES.zombie
+    );
 
     statsText.text =
       "" +
@@ -252,7 +194,7 @@ export const init = (gameEl) => {
       document.state.stats.tick;
   });
 
-  app.renderer.plugins.interaction.on("pointerup", onClick);
+  viewport.on("clicked", onClick);
 
   return app;
 };
