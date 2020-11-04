@@ -1,4 +1,10 @@
 defmodule Utils.Math do
+  alias :math, as: Math
+
+  def distance(ax, ay, bx, by) do
+    Math.sqrt(Math.pow(ax - bx, 2) + Math.pow(ay - by, 2))
+  end
+
   def collision_circle_with_rectangle?(
         circle_x,
         circle_y,
@@ -67,16 +73,16 @@ defmodule Utils.Math do
     ay = ay - cy
     bx = bx - cx
     by = by - cy
-    a = :math.pow(bx - ax, 2) + :math.pow(by - ay, 2)
+    a = Math.pow(bx - ax, 2) + Math.pow(by - ay, 2)
     b = 2 * (ax * (bx - ax) + ay * (by - ay))
 
-    c = :math.pow(ax, 2) + :math.pow(ay, 2) - :math.pow(r, 2)
-    disc = :math.pow(b, 2) - 4 * a * c
+    c = Math.pow(ax, 2) + Math.pow(ay, 2) - Math.pow(r, 2)
+    disc = Math.pow(b, 2) - 4 * a * c
 
     if disc <= 0 do
       false
     else
-      sqrtdisc = :math.sqrt(disc)
+      sqrtdisc = Math.sqrt(disc)
       t1 = (-b + sqrtdisc) / (2 * a)
       t2 = (-b - sqrtdisc) / (2 * a)
 
