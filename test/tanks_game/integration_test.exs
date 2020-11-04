@@ -235,8 +235,6 @@ defmodule Tanks.Game.IntegrationTest do
       projectile_size = projectile.components.size.state.size
       assert [] == Tanks.Game.Cache.Position.colliding_entities(@game_id, 0, 0, 10)
 
-      Process.sleep(500)
-
       ECS.Registry.Entity.all(@game_id)
 
       Tanks.Game.Cache.Position.update(@game_id)
