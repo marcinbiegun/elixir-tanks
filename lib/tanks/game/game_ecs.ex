@@ -87,6 +87,12 @@ defmodule Tanks.GameECS do
     ECS.Registry.ComponentTuple.init_register_type(game_id, reg_id)
 
     reg_id =
+      Tanks.Game.System.HealthDying.component_types()
+      |> ECS.Registry.ComponentTuple.build_registry_id()
+
+    ECS.Registry.ComponentTuple.init_register_type(game_id, reg_id)
+
+    reg_id =
       Tanks.Game.System.Collision.component_types()
       |> ECS.Registry.ComponentTuple.build_registry_id()
 

@@ -22,6 +22,26 @@ defmodule Tanks.Game.EventProcessor do
 
   def process_event(
         game_id,
+        %Tanks.Game.Event.Hit{entity_module: entity_module, entity_id: entity_id, data: _data} =
+          event
+      ) do
+    case ECS.Registry.Entity.get(game_id, entity_module, entity_id) do
+      nil ->
+        Logger.error(
+          "Unable to process Destroy event, because entity #{entity_id} doesn't exist! Event: #{
+            inspect(event)
+          }"
+        )
+
+      entity ->
+        health = entity.components.health
+        new_state = %{health.state | hp: health.state.hp - 1}
+        ECS.Component.update(health.pid, new_state)
+    end
+  end
+
+  def process_event(
+        game_id,
         %Tanks.Game.Event.Destroy{entity_module: entity_module, entity_id: entity_id} = event
       ) do
     case ECS.Registry.Entity.get(game_id, entity_module, entity_id) do

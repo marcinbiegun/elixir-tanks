@@ -110,13 +110,19 @@ defmodule Tanks.Game.Server.Impl do
   defp do_tick(game_id, tick) do
     process_input_events(game_id)
 
+    Tanks.Game.System.LifetimeDying.process(game_id)
+    process_internal_events(game_id)
+
     Tanks.Game.Cache.Position.update(game_id)
 
-    Tanks.Game.System.LifetimeDying.process(game_id)
     if rem(tick, @run_ai_system_every_tick) == 0, do: Tanks.Game.System.AI.process(game_id)
     Tanks.Game.System.Movement.process(game_id)
     Tanks.Game.System.Velocity.process(game_id)
     Tanks.Game.System.Collision.process(game_id)
+
+    process_internal_events(game_id)
+
+    Tanks.Game.System.HealthDying.process(game_id)
 
     process_internal_events(game_id)
   end

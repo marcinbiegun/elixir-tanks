@@ -98,8 +98,16 @@ defmodule Tanks.Game.System.Collision do
         Tanks.Game.Entity.Projectile,
         projectile_id,
         Tanks.Game.Entity.Wall,
-        _wall_id
+        wall_id
       ) do
+    hit_event =
+      Tanks.Game.Event.Hit.new(
+        Tanks.Game.Entity.Wall,
+        wall_id
+      )
+
+    ECS.Queue.put(game_id, :internal, hit_event)
+
     destroy_projectile_event =
       Tanks.Game.Event.Destroy.new(
         Tanks.Game.Entity.Projectile,
@@ -133,7 +141,9 @@ defmodule Tanks.Game.System.Collision do
     ECS.Queue.put(game_id, :internal, destroy_projectile_event)
   end
 
-  def resolve_collision(_, _, _, _), do: :ok
+  def resolve_collision(_, _, _, _) do
+    :ok
+  end
 
   def resolve_board_collision(game_id, _board, Tanks.Game.Entity.Projectile, projectile_id) do
     destroy_projectile_event =

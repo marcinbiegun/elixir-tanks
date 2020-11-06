@@ -224,6 +224,69 @@ defmodule Tanks.Game.IntegrationTest do
     end
   end
 
+  describe "health points" do
+    test "losing hp and dying" do
+      # Spawn wall
+      wall =
+        Tanks.Game.Entity.Wall.new(10, 10)
+        |> Tanks.GameECS.add_entity(@game_id)
+
+      assert wall.components.health.state.hp == 5
+
+      # Projectile hits wall
+      projectile =
+        Tanks.Game.Entity.Projectile.new(10, 10, 0, 0)
+        |> Tanks.GameECS.add_entity(@game_id)
+
+      Tanks.Game.Server.Impl.tick(@game_id, 1)
+
+      refute ECS.Registry.Entity.get(@game_id, projectile.__struct__, projectile.id)
+
+      wall = ECS.Entity.reload(wall)
+      assert wall.components.health.state.hp == 4
+
+      # Projectile hits wall
+      projectile =
+        Tanks.Game.Entity.Projectile.new(10, 10, 0, 0)
+        |> Tanks.GameECS.add_entity(@game_id)
+
+      Tanks.Game.Server.Impl.tick(@game_id, 2)
+
+      wall = ECS.Entity.reload(wall)
+      assert wall.components.health.state.hp == 3
+
+      # Projectile hits wall
+      projectile =
+        Tanks.Game.Entity.Projectile.new(10, 10, 0, 0)
+        |> Tanks.GameECS.add_entity(@game_id)
+
+      Tanks.Game.Server.Impl.tick(@game_id, 4)
+
+      wall = ECS.Entity.reload(wall)
+      assert wall.components.health.state.hp == 2
+
+      # Projectile hits wall
+      projectile =
+        Tanks.Game.Entity.Projectile.new(10, 10, 0, 0)
+        |> Tanks.GameECS.add_entity(@game_id)
+
+      Tanks.Game.Server.Impl.tick(@game_id, 5)
+
+      wall = ECS.Entity.reload(wall)
+      assert wall.components.health.state.hp == 1
+
+      # Projectile hits wall
+      projectile =
+        Tanks.Game.Entity.Projectile.new(10, 10, 0, 0)
+        |> Tanks.GameECS.add_entity(@game_id)
+
+      Tanks.Game.Server.Impl.tick(@game_id, 6)
+
+      # Wall destroyed
+      refute ECS.Registry.Entity.get(@game_id, wall.__struct__, wall.id)
+    end
+  end
+
   describe "position cache" do
     test "detecting collisions" do
       assert [] == Tanks.Game.Cache.Position.colliding_entities(@game_id, 0, 0, 10)
