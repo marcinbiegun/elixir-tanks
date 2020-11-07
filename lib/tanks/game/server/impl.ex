@@ -71,11 +71,14 @@ defmodule Tanks.Game.Server.Impl do
       |> Enum.map(fn entity ->
         %{x: position_x, y: position_y} = entity.components.position.state
         %{size: size_size} = entity.components.size.state
+        %{current: hp_current, max: hp_max} = entity.components.health.state
 
         data = %{
           x: position_x,
           y: position_y,
-          size: size_size
+          size: size_size,
+          hp_current: hp_current,
+          hp_max: hp_max
         }
 
         {entity.id, data}

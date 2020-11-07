@@ -12,7 +12,7 @@ defmodule Tanks.Game.System.HealthDying do
   defp dispatch(game_id, {entity_type, entity_id, {health_pid}}) do
     health = ECS.Component.get_state(health_pid)
 
-    if health.hp <= 0 do
+    if health.current <= 0 do
       event = Tanks.Game.Event.Destroy.new(entity_type, entity_id)
       ECS.Queue.put(game_id, :internal, event)
     end

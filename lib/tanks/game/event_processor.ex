@@ -35,7 +35,7 @@ defmodule Tanks.Game.EventProcessor do
 
       entity ->
         health = entity.components.health
-        new_state = %{health.state | hp: health.state.hp - 1}
+        new_state = %{health.state | current: health.state.current - 1}
         ECS.Component.update(health.pid, new_state)
     end
   end

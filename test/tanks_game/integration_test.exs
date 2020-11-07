@@ -156,7 +156,8 @@ defmodule Tanks.Game.IntegrationTest do
                %Tanks.Game.Event.Destroy{
                  entity_id: ^projectile_id,
                  entity_module: Tanks.Game.Entity.Projectile
-               }
+               },
+               _
              ] = ECS.Queue.get(@game_id, :internal)
     end
 
@@ -231,7 +232,7 @@ defmodule Tanks.Game.IntegrationTest do
         Tanks.Game.Entity.Wall.new(10, 10)
         |> Tanks.GameECS.add_entity(@game_id)
 
-      assert wall.components.health.state.hp == 5
+      assert wall.components.health.state.current == 5
 
       # Projectile hits wall
       projectile =
@@ -243,42 +244,38 @@ defmodule Tanks.Game.IntegrationTest do
       refute ECS.Registry.Entity.get(@game_id, projectile.__struct__, projectile.id)
 
       wall = ECS.Entity.reload(wall)
-      assert wall.components.health.state.hp == 4
+      assert wall.components.health.state.current == 4
 
       # Projectile hits wall
-      projectile =
-        Tanks.Game.Entity.Projectile.new(10, 10, 0, 0)
-        |> Tanks.GameECS.add_entity(@game_id)
+      Tanks.Game.Entity.Projectile.new(10, 10, 0, 0)
+      |> Tanks.GameECS.add_entity(@game_id)
 
       Tanks.Game.Server.Impl.tick(@game_id, 2)
 
       wall = ECS.Entity.reload(wall)
-      assert wall.components.health.state.hp == 3
+      assert wall.components.health.state.current == 3
 
       # Projectile hits wall
-      projectile =
-        Tanks.Game.Entity.Projectile.new(10, 10, 0, 0)
-        |> Tanks.GameECS.add_entity(@game_id)
+      Tanks.Game.Entity.Projectile.new(10, 10, 0, 0)
+      |> Tanks.GameECS.add_entity(@game_id)
 
       Tanks.Game.Server.Impl.tick(@game_id, 4)
 
       wall = ECS.Entity.reload(wall)
-      assert wall.components.health.state.hp == 2
+      assert wall.components.health.state.current == 2
 
       # Projectile hits wall
-      projectile =
-        Tanks.Game.Entity.Projectile.new(10, 10, 0, 0)
-        |> Tanks.GameECS.add_entity(@game_id)
+      Tanks.Game.Entity.Projectile.new(10, 10, 0, 0)
+      |> Tanks.GameECS.add_entity(@game_id)
 
       Tanks.Game.Server.Impl.tick(@game_id, 5)
 
       wall = ECS.Entity.reload(wall)
-      assert wall.components.health.state.hp == 1
+      assert wall.components.health.state.current == 1
 
       # Projectile hits wall
-      projectile =
-        Tanks.Game.Entity.Projectile.new(10, 10, 0, 0)
-        |> Tanks.GameECS.add_entity(@game_id)
+      Tanks.Game.Entity.Projectile.new(10, 10, 0, 0)
+      |> Tanks.GameECS.add_entity(@game_id)
 
       Tanks.Game.Server.Impl.tick(@game_id, 6)
 
