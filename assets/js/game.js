@@ -17,6 +17,12 @@ const FILES = {
   },
 };
 
+const TEXT_STYLES = {
+  hpBar: new PIXI.TextStyle({
+    fontSize: 12,
+  }),
+};
+
 const addStatsText = (app) => {
   const basicText = new PIXI.Text("");
   basicText.x = 20;
@@ -47,16 +53,47 @@ const onClick = (event) => {
   document.channel.push("action", actionData, 10000);
 };
 
-const wrapWithSizeCircle = (object, size) => {
+const addSizeCircle = (container, size) => {
   let sizeCircle = new PIXI.Graphics();
   sizeCircle.lineStyle(1, 0xffbd01, 1);
   sizeCircle.beginFill(0xc34288, 0);
   sizeCircle.drawCircle(0, 0, size);
   sizeCircle.endFill();
 
-  let container = new PIXI.Container();
   container.addChild(sizeCircle);
-  container.addChild(object);
+  container.sizeCircle = sizeCircle;
+
+  return container;
+};
+
+const addHpBar = (container, hp, maxHp) => {
+  if (hp == null || maxHp == null) {
+    return container;
+  }
+  const hpBar = new PIXI.Text("" + hp + "/" + maxHp, TEXT_STYLES.hpBar);
+  container.addChild(hpBar);
+  container.hpBar = hpBar;
+
+  return container;
+};
+
+const updateHpBar = (container, hp, maxHp) => {
+  if (hp == null || maxHp == null) {
+    return container;
+  }
+
+  container.hpBar.text = "" + hp + "/" + maxHp;
+  return container;
+};
+
+const addSpriteTexture = (container, imgUrl) => {
+  const texture = PIXI.Texture.from(imgUrl);
+  let sprite = new PIXI.Sprite(texture);
+  sprite.pivot.x = sprite.width / 2;
+  sprite.pivot.y = sprite.height / 2;
+
+  container.addChild(sprite);
+  container.sprite = sprite;
 
   return container;
 };
@@ -66,15 +103,17 @@ const updateSprites = (viewport, sprites, data, imgUrl) => {
     // Update
     if (sprites[id] != null) {
       sprites[id].position.set(object.x, object.y);
+      sprites[id] = updateHpBar(sprites[id], object.hp_current, object.hp_max);
       // Create
     } else {
-      const texture = PIXI.Texture.from(imgUrl);
-      let sprite = new PIXI.Sprite(texture);
-      sprite.pivot.x = sprite.width / 2;
-      sprite.pivot.y = sprite.height / 2;
-      sprite = wrapWithSizeCircle(sprite, object.size);
-      viewport.addChild(sprite);
-      sprites[id] = sprite;
+      let container = new PIXI.Container();
+
+      container = addSpriteTexture(container, imgUrl);
+      container = addSizeCircle(container, object.size);
+      container = addHpBar(container, object.hp_current, object.hp_max);
+
+      viewport.addChild(container);
+      sprites[id] = container;
       sprites[id].position.set(object.x, object.y);
     }
   }
