@@ -1,9 +1,10 @@
 import * as PIXI from "pixi.js";
-import { isObject, wrap } from "lodash";
 import { Viewport } from "pixi-viewport";
 
 const CONFIG = {
   tileSize: 32,
+  screenWidth: 800,
+  screenHeight: 600,
 };
 
 const FILES = {
@@ -31,13 +32,26 @@ const addStatsText = (app) => {
   return basicText;
 };
 
+const coordsScreenToWorld = (viewport, screenCoords) => {
+  const worldX =
+    viewport.left +
+    (screenCoords.x / CONFIG.screenWidth) * (viewport.right - viewport.left);
+
+  const worldY =
+    viewport.top +
+    (screenCoords.y / CONFIG.screenHeight) * (viewport.bottom - viewport.top);
+
+  return { x: worldX, y: worldY };
+};
+
 // OnClick - fire action
-const onClick = (event) => {
+const onClick = (viewport, event) => {
   const sourceX = document.state.players[document.playerId].x;
   const sourceY = document.state.players[document.playerId].y;
 
-  const targetX = event.world.x;
-  const targetY = event.world.y;
+  const worldCoords = coordsScreenToWorld(viewport, event.data.global);
+  const targetX = worldCoords.x;
+  const targetY = worldCoords.y;
 
   const dx = targetX - sourceX;
   const dy = targetY - sourceY;
@@ -149,21 +163,18 @@ const drawTiles = (app, tiles) => {
 };
 
 export const init = (gameEl) => {
-  const screenWidth = 800;
-  const screenHeight = 600;
-
   // Init app
   const app = new PIXI.Application({
-    width: screenWidth,
-    height: screenHeight,
+    width: CONFIG.screenWidth,
+    height: CONFIG.screenHeight,
     backgroundColor: 0x1099bb,
     resolution: window.devicePixelRatio || 1,
   });
 
   // Viewport
   const viewport = new Viewport({
-    screenWidth: screenWidth,
-    screenHeight: screenHeight,
+    screenWidth: CONFIG.screenWidth,
+    screenHeight: CONFIG.screenHeight,
     worldWidth: 1000,
     worldHeight: 1000,
 
@@ -236,7 +247,9 @@ export const init = (gameEl) => {
       document.state.stats.tick;
   });
 
-  viewport.on("clicked", onClick);
+  app.renderer.plugins.interaction.on("pointerdown", (event) => {
+    return onClick(viewport, event);
+  });
 
   return app;
 };
