@@ -67,15 +67,25 @@ const onClick = (viewport, event) => {
   document.channel.push("action", actionData, 10000);
 };
 
-const addSizeCircle = (container, size) => {
-  let sizeCircle = new PIXI.Graphics();
-  sizeCircle.lineStyle(1, 0xffbd01, 1);
-  sizeCircle.beginFill(0xc34288, 0);
-  sizeCircle.drawCircle(0, 0, size);
-  sizeCircle.endFill();
+const addShapeMarker = (container, shape) => {
+  let marker = new PIXI.Graphics();
 
-  container.addChild(sizeCircle);
-  container.sizeCircle = sizeCircle;
+  if (shape[0] == "circle") {
+    const size = shape[1];
+    marker.lineStyle(1, 0xffbd01, 1);
+    marker.beginFill(0xc34288, 0);
+    marker.drawCircle(0, 0, size);
+    marker.endFill();
+  } else if (shape[0] == "rectangle") {
+    const size = shape[1];
+    marker.lineStyle(1, 0xffbd01, 1);
+    marker.beginFill(0xc34288, 0);
+    marker.drawRect(container.x - size / 2, container.y - size / 2, size, size);
+    marker.endFill();
+  }
+
+  container.addChild(marker);
+  container.marker = marker;
 
   return container;
 };
@@ -123,7 +133,7 @@ const updateSprites = (viewport, sprites, data, imgUrl) => {
       let container = new PIXI.Container();
 
       container = addSpriteTexture(container, imgUrl);
-      container = addSizeCircle(container, object.size);
+      container = addShapeMarker(container, object.shape);
       container = addHpBar(container, object.hp_current, object.hp_max);
 
       viewport.addChild(container);

@@ -19,7 +19,7 @@ defmodule Tanks.Game.Entity.Zombie do
   defstruct [:id, :components]
 
   @speed 1
-  @size 20
+  @size 20.0
 
   def new(x, y) do
     brain = Tanks.Game.Components.Brain.new()
@@ -33,7 +33,8 @@ defmodule Tanks.Game.Entity.Zombie do
         speed: @speed
       })
 
-    size = Tanks.Game.Components.Size.new(%{size: @size})
+    shape = {:rectangle, @size}
+    size = Tanks.Game.Components.Size.new(%{shape: shape})
     position = Tanks.Game.Components.Position.new(%{x: x, y: y})
 
     components = %{

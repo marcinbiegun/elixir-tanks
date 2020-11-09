@@ -38,12 +38,12 @@ defmodule Tanks.Game.Server.Impl do
       ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Player)
       |> Enum.map(fn entity ->
         %{x: position_x, y: position_y} = entity.components.position.state
-        %{size: size_size} = entity.components.size.state
+        %{shape: shape} = entity.components.size.state
 
         data = %{
           x: position_x,
           y: position_y,
-          size: size_size
+          shape: shape |> Tuple.to_list()
         }
 
         {entity.id, data}
@@ -54,12 +54,12 @@ defmodule Tanks.Game.Server.Impl do
       ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Projectile)
       |> Enum.map(fn entity ->
         %{x: position_x, y: position_y} = entity.components.position.state
-        %{size: size_size} = entity.components.size.state
+        %{shape: shape} = entity.components.size.state
 
         data = %{
           x: position_x,
           y: position_y,
-          size: size_size
+          shape: shape |> Tuple.to_list()
         }
 
         {entity.id, data}
@@ -70,13 +70,13 @@ defmodule Tanks.Game.Server.Impl do
       ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Wall)
       |> Enum.map(fn entity ->
         %{x: position_x, y: position_y} = entity.components.position.state
-        %{size: size_size} = entity.components.size.state
+        %{shape: shape} = entity.components.size.state
         %{current: hp_current, max: hp_max} = entity.components.health.state
 
         data = %{
           x: position_x,
           y: position_y,
-          size: size_size,
+          shape: shape |> Tuple.to_list(),
           hp_current: hp_current,
           hp_max: hp_max
         }
@@ -89,12 +89,12 @@ defmodule Tanks.Game.Server.Impl do
       ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Zombie)
       |> Enum.map(fn entity ->
         %{x: position_x, y: position_y} = entity.components.position.state
-        %{size: size_size} = entity.components.size.state
+        %{shape: shape} = entity.components.size.state
 
         data = %{
           x: position_x,
           y: position_y,
-          size: size_size
+          shape: shape |> Tuple.to_list()
         }
 
         {entity.id, data}

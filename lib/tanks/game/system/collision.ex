@@ -1,7 +1,6 @@
 defmodule Tanks.Game.System.Collision do
   alias Tanks.Game.Components.Position
   alias Tanks.Game.Components.Size
-  alias :math, as: Math
 
   # Must be sorted alphabetically
   @entity_collisions [
@@ -30,9 +29,9 @@ defmodule Tanks.Game.System.Collision do
 
   defp build({entity_type, entity_id, {position_pid, size_pid}}, :move) do
     %{x: pos_x, y: pos_y} = ECS.Component.get_state(position_pid)
-    %{size: size} = ECS.Component.get_state(size_pid)
+    %{shape: shape} = ECS.Component.get_state(size_pid)
 
-    {entity_type, entity_id, pos_x, pos_y, size}
+    {entity_type, entity_id, pos_x, pos_y, shape}
   end
 
   defp detect_size_collisions(collidables, game_id) do
@@ -45,13 +44,18 @@ defmodule Tanks.Game.System.Collision do
     end)
     |> Enum.each(fn collidables_pair ->
       [
-        {entity_type, entity_id, pos_x, pos_y, size},
-        {other_entity_type, other_entity_id, other_pos_x, other_pos_y, other_size}
+        {entity_type, entity_id, pos_x, pos_y, shape},
+        {other_entity_type, other_entity_id, other_pos_x, other_pos_y, other_shape}
       ] = collidables_pair
 
-      distance = Math.sqrt(Math.pow(other_pos_x - pos_x, 2) + Math.pow(other_pos_y - pos_y, 2))
-
-      if distance < size / 2 + other_size / 2 do
+      if Utils.Math.collision?(
+           pos_x,
+           pos_y,
+           shape,
+           other_pos_x,
+           other_pos_y,
+           other_shape
+         ) do
         resolve_collision(
           game_id,
           entity_type,
@@ -65,7 +69,7 @@ defmodule Tanks.Game.System.Collision do
 
   # TODO: move to config module
   @board_entity_type Tanks.Game.Entity.Board
-  @board_tile_size 32
+  @board_tile_size 32.0
   @board_collidables [:wall]
 
   defp detect_boards_collisions(collidables, game_id) do
@@ -79,14 +83,14 @@ defmodule Tanks.Game.System.Collision do
     tiles = board.components.tiles.state.tiles
 
     collidables
-    |> Enum.map(fn {entity_type, entity_id, pos_x, pos_y, size} ->
+    |> Enum.map(fn {entity_type, entity_id, pos_x, pos_y, shape} ->
       if Utils.TilesComp.collides?(
            tiles,
            @board_tile_size,
            @board_collidables,
            pos_x,
            pos_y,
-           size
+           shape
          ) do
         resolve_board_collision(game_id, board, entity_type, entity_id)
       end

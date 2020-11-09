@@ -6,9 +6,10 @@ defmodule Utils.TilesComp do
   positive `y` means going right
   """
 
-  def collides?(tiles, tile_size, collidable_tiles, pos_x, pos_y, size) do
-    tile_x = div(round(pos_x), tile_size)
-    tile_y = div(round(pos_y), tile_size)
+  # TODO: use shape
+  def collides?(tiles, tile_size, collidable_tiles, pos_x, pos_y, shape) do
+    tile_x = div(round(pos_x), round(tile_size))
+    tile_y = div(round(pos_y), round(tile_size))
 
     tile_coords =
       for x <- [tile_x - 1, tile_x, tile_x + 1],
@@ -17,14 +18,13 @@ defmodule Utils.TilesComp do
 
     Enum.any?(tile_coords, fn {x, y} ->
       Utils.Tiles.get(tiles, x, y) in collidable_tiles and
-        Utils.Math.collision_circle_with_rectangle?(
-          pos_x,
-          pos_y,
-          size,
+        Utils.Math.collision?(
           x * tile_size,
           y * tile_size,
-          tile_size,
-          tile_size
+          {:rectangle, tile_size},
+          pos_x,
+          pos_y,
+          shape
         )
     end)
   end

@@ -16,12 +16,13 @@ defmodule Tanks.Game.Entity.Wall do
 
   defstruct [:id, :components]
 
-  @size 30
+  @size 30.0
   @hp 5
 
   def new(x, y) do
     position = Position.new(%{x: x, y: y})
-    size = Size.new(%{size: @size})
+    shape = {:rectangle, @size}
+    size = Size.new(%{shape: shape})
     health = Health.new(@hp)
 
     components = %{

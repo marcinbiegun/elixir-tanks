@@ -40,8 +40,6 @@ defmodule Tanks.Game.IntegrationTest do
 
       assert player.__struct__ == Tanks.Game.Entity.Player
       assert player.components.position.__struct__ == Tanks.Game.Components.Position
-
-      # Tanks.Game.reset()
     end
 
     test "getting list of all entites of a given type" do
@@ -286,36 +284,37 @@ defmodule Tanks.Game.IntegrationTest do
 
   describe "position cache" do
     test "detecting collisions" do
-      assert [] == Tanks.Game.Cache.Position.colliding_entities(@game_id, 0, 0, 10)
+      assert [] == Tanks.Game.Cache.Position.colliding_entities(@game_id, 0, 0, {:circle, 10})
 
       projectile =
         Tanks.Game.Entity.Projectile.new(0, 0, 0, 0)
         |> Tanks.GameECS.add_entity(@game_id)
 
-      projectile_size = projectile.components.size.state.size
-      assert [] == Tanks.Game.Cache.Position.colliding_entities(@game_id, 0, 0, 10)
+      projectile_shape = projectile.components.size.state.shape
+      {:circle, projectile_diameter} = projectile_shape
+      assert [] == Tanks.Game.Cache.Position.colliding_entities(@game_id, 0, 0, {:circle, 10})
 
       ECS.Registry.Entity.all(@game_id)
 
       Tanks.Game.Cache.Position.update(@game_id)
 
       assert [{Tanks.Game.Entity.Projectile, projectile.id}] ==
-               Tanks.Game.Cache.Position.colliding_entities(@game_id, 0, 0, 1)
+               Tanks.Game.Cache.Position.colliding_entities(@game_id, 0, 0, {:circle, 1})
 
       assert [] ==
                Tanks.Game.Cache.Position.colliding_entities(
                  @game_id,
-                 projectile_size / 2 + 2,
-                 projectile_size / 2 + 2,
-                 1
+                 projectile_diameter / 2 + 2,
+                 projectile_diameter / 2 + 2,
+                 {:circle, 1}
                )
 
       assert [{Tanks.Game.Entity.Projectile, projectile.id}] ==
                Tanks.Game.Cache.Position.colliding_entities(
                  @game_id,
-                 projectile_size / 2 + 2,
-                 projectile_size / 2 + 2,
-                 10
+                 projectile_diameter / 2 + 2,
+                 projectile_diameter / 2 + 2,
+                 {:circle, 10}
                )
     end
   end
