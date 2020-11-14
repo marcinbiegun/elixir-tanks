@@ -84,7 +84,7 @@ defmodule Tanks.Game.Server do
 
     case level do
       1 ->
-        Tanks.Game.Content.Level.create_level_entities()
+        Tanks.Game.Content.Map.generate_entities()
         |> Enum.map(&Tanks.GameECS.add_entity(&1, game_id))
 
       _ ->
@@ -127,7 +127,7 @@ defmodule Tanks.Game.Server do
 
   def handle_call({:join_player, player_token}, _from, %{game_id: game_id} = state) do
     player =
-      Tanks.Game.Entity.Player.new()
+      Tanks.Game.Entity.Player.new(40, 40)
       |> Tanks.GameECS.add_entity(game_id)
 
     player = %{id: player.id, token: player_token}

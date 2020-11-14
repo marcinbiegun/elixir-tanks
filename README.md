@@ -33,3 +33,8 @@ This is an experiment to test how ECS architecture works in a real life scenario
   of a tick
 - Caches are used to gather state from components and keep them in a
   single process.
+
+## Mix tasks
+
+- `mix generate_dugeon` use for prevewing procedural map generation
+

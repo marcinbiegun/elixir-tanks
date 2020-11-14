@@ -19,7 +19,9 @@ defmodule Tanks.Game.Entity.Player do
   @speed 5.0
   @size 20.0
 
-  def new() do
+  def new(), do: new(0, 0)
+
+  def new(x, y) do
     control =
       Tanks.Game.Components.Control.new(%{
         down: false,
@@ -31,7 +33,7 @@ defmodule Tanks.Game.Entity.Player do
 
     shape = {:rectangle, @size}
     size = Tanks.Game.Components.Size.new(%{shape: shape})
-    position = Tanks.Game.Components.Position.new(%{x: 0, y: 0})
+    position = Tanks.Game.Components.Position.new(%{x: x, y: y})
 
     components = %{
       control: control,
