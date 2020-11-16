@@ -2,6 +2,8 @@
 
 This is an experiment to test how ECS architecture works in a real life scenario.
 
+![Gameplay video](https://raw.githubusercontent.com/marcinbiegun/elixir-tanks/master/_docs/gameplay_20201116.gif)
+
 Project state is pretty much **work in progress**. It needs more
 more game features and rebalancing to make the game enjoyable. After that
 I'm going to improve the performance and make a general refactoring.
