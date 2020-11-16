@@ -1,18 +1,21 @@
 defmodule Tanks.Game.Entity.Zombie do
   alias Tanks.Game.Components.{
+    Attack,
     Brain,
     Control,
-    Size,
-    Position
+    Position,
+    Size
   }
 
   @type t :: %__MODULE__{
           id: Integer.t(),
           components: %{
+            attack: Attack.t(),
             brain: Brain.t(),
             control: Control.t(),
-            size: Size.t(),
-            position: Position.t()
+            meele_attack: Position.t(),
+            position: Position.t(),
+            size: Size.t()
           }
         }
 
@@ -20,12 +23,22 @@ defmodule Tanks.Game.Entity.Zombie do
 
   @speed 1
   @size 20.0
+  @shape :rectangle
+  @meele_attack_range 20.0
+  @meele_attack_reload 1000
+  @sight_range 400.0
 
   def new(x, y) do
-    brain = Tanks.Game.Components.Brain.new()
+    attack =
+      Attack.new(%{
+        range: @meele_attack_range,
+        reload: @meele_attack_reload
+      })
+
+    brain = Brain.new(%{sight_range: @sight_range})
 
     control =
-      Tanks.Game.Components.Control.new(%{
+      Control.new(%{
         down: false,
         left: false,
         right: false,
@@ -33,15 +46,16 @@ defmodule Tanks.Game.Entity.Zombie do
         speed: @speed
       })
 
-    shape = {:rectangle, @size}
-    size = Tanks.Game.Components.Size.new(%{shape: shape})
-    position = Tanks.Game.Components.Position.new(%{x: x, y: y})
+    shape = {@shape, @size}
+    size = Size.new(%{shape: shape})
+    position = Position.new(%{x: x, y: y})
 
     components = %{
+      attack: attack,
       brain: brain,
       control: control,
-      size: size,
-      position: position
+      position: position,
+      size: size
     }
 
     ECS.Entity.new(__MODULE__, components)

@@ -18,11 +18,11 @@ defmodule Tanks.Game.Entity.Wall do
 
   @size 30.0
   @hp 5
+  @shape :rectangle
 
   def new(x, y) do
     position = Position.new(%{x: x, y: y})
-    shape = {:rectangle, @size}
-    size = Size.new(%{shape: shape})
+    size = Size.new(%{shape: {@shape, @size}})
     health = Health.new(@hp)
 
     components = %{

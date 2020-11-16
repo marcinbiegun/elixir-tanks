@@ -28,7 +28,7 @@ defmodule Tanks.Game.EventProcessor do
     case ECS.Registry.Entity.get(game_id, entity_module, entity_id) do
       nil ->
         Logger.error(
-          "Unable to process Destroy event, because entity #{entity_id} doesn't exist! Event: #{
+          "Unable to process Hit event, because entity #{entity_id} doesn't exist! Event: #{
             inspect(event)
           }"
         )

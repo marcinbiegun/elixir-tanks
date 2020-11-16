@@ -1,29 +1,33 @@
 defmodule Tanks.Game.Entity.Player do
   alias Tanks.Game.Components.{
     Control,
-    Size,
-    Position
+    Health,
+    Position,
+    Size
   }
 
   @type t :: %__MODULE__{
           id: Integer.t(),
           components: %{
             control: Control.t(),
-            size: Size.t(),
-            position: Position.t()
+            health: Health.t(),
+            position: Position.t(),
+            size: Size.t()
           }
         }
 
   defstruct [:id, :components]
 
   @speed 5.0
+  @shape :rectangle
   @size 20.0
+  @hp 10
 
   def new(), do: new(0, 0)
 
   def new(x, y) do
     control =
-      Tanks.Game.Components.Control.new(%{
+      Control.new(%{
         down: false,
         left: false,
         right: false,
@@ -31,14 +35,15 @@ defmodule Tanks.Game.Entity.Player do
         speed: @speed
       })
 
-    shape = {:rectangle, @size}
-    size = Tanks.Game.Components.Size.new(%{shape: shape})
-    position = Tanks.Game.Components.Position.new(%{x: x, y: y})
+    size = Size.new(%{shape: {@shape, @size}})
+    position = Position.new(%{x: x, y: y})
+    health = Health.new(@hp)
 
     components = %{
       control: control,
-      size: size,
-      position: position
+      health: health,
+      position: position,
+      size: size
     }
 
     ECS.Entity.new(__MODULE__, components)

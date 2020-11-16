@@ -67,6 +67,11 @@ const onClick = (viewport, event) => {
   document.channel.push("action", actionData, 10000);
 };
 
+const addSightRangeMarker = (container, sightRange) => {
+  if (sightRange == null) return container;
+  return addShapeMarker(container, ["circle", sightRange]);
+};
+
 const addShapeMarker = (container, shape) => {
   let marker = new PIXI.Graphics();
 
@@ -134,6 +139,7 @@ const updateSprites = (viewport, sprites, data, imgUrl) => {
 
       container = addSpriteTexture(container, imgUrl);
       container = addShapeMarker(container, object.shape);
+      container = addSightRangeMarker(container, object.sight_range);
       container = addHpBar(container, object.hp_current, object.hp_max);
 
       viewport.addChild(container);

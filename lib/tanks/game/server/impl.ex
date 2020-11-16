@@ -39,11 +39,14 @@ defmodule Tanks.Game.Server.Impl do
       |> Enum.map(fn entity ->
         %{x: position_x, y: position_y} = entity.components.position.state
         %{shape: shape} = entity.components.size.state
+        %{current: hp_current, max: hp_max} = entity.components.health.state
 
         data = %{
           x: position_x,
           y: position_y,
-          shape: shape |> Tuple.to_list()
+          shape: shape |> Tuple.to_list(),
+          hp_current: hp_current,
+          hp_max: hp_max
         }
 
         {entity.id, data}
@@ -88,13 +91,15 @@ defmodule Tanks.Game.Server.Impl do
     zombies =
       ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Zombie)
       |> Enum.map(fn entity ->
+        %{sight_range: sight_range} = entity.components.brain.state
         %{x: position_x, y: position_y} = entity.components.position.state
         %{shape: shape} = entity.components.size.state
 
         data = %{
           x: position_x,
           y: position_y,
-          shape: shape |> Tuple.to_list()
+          shape: shape |> Tuple.to_list(),
+          sight_range: sight_range
         }
 
         {entity.id, data}
