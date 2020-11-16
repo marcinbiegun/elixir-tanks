@@ -1,6 +1,7 @@
 defmodule Tanks.Game.System.Collision do
   alias Tanks.Game.Components.Position
   alias Tanks.Game.Components.Size
+  alias Tanks.Game.Content
 
   # Must be sorted alphabetically
   @entity_collisions [
@@ -67,13 +68,8 @@ defmodule Tanks.Game.System.Collision do
     end)
   end
 
-  # TODO: move to config module
-  @board_entity_type Tanks.Game.Entity.Board
-  @board_tile_size 32.0
-  @board_collidables [:wall]
-
   defp detect_boards_collisions(collidables, game_id) do
-    ECS.Registry.Entity.all(game_id, @board_entity_type)
+    ECS.Registry.Entity.all(game_id, Content.Config.tile_entity_type())
     |> Enum.map(fn board ->
       detect_board_collisions(collidables, board, game_id)
     end)
@@ -86,8 +82,8 @@ defmodule Tanks.Game.System.Collision do
     |> Enum.map(fn {entity_type, entity_id, pos_x, pos_y, shape} ->
       if Utils.TilesComp.collides?(
            tiles,
-           @board_tile_size,
-           @board_collidables,
+           Content.Config.tile_size(),
+           Content.Config.collidable_tiles(),
            pos_x,
            pos_y,
            shape
