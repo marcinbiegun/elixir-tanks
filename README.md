@@ -2,12 +2,11 @@
 
 This is an experiment to test how ECS architecture works in a real life scenario.
 
-## TODO
+Project state is pretty much **work in progress**. It needs more
+more game features and rebalancing to make the game enjoyable. After that
+I'm going to improve the performance and make a general refactoring.
 
-- [] proper modules order
-- [] handle components / entities crashes
-
-## Asset packs
+## Asset packs used
 
 - https://www.kenney.nl/assets/topdown-shooter
 - https://www.kenney.nl/assets/topdown-tanks-redux
@@ -21,7 +20,7 @@ This is an experiment to test how ECS architecture works in a real life scenario
 - Servers
 - Cache
 
-### System logic
+### System design
 
 - Components are registered with their own processes
 - Entities are only groups of components, they don't have their own
