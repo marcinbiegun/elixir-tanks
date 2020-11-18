@@ -158,6 +158,15 @@ defmodule Tanks.Game.Server do
     Tanks.Game.Content.Weapon.fire_projectile(player_x, player_y, velocity_x, velocity_y)
     |> Tanks.GameECS.add_entity(game_id)
 
+    effect_event =
+      Tanks.Game.Event.Effect.new(
+        Tanks.Game.Entity.Player,
+        player_id,
+        %{x: player_x, y: player_y, type: "fire"}
+      )
+
+    ECS.Queue.put(game_id, :output, effect_event)
+
     {:noreply, state}
   end
 

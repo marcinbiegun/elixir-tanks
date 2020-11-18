@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import sound from "pixi-sound";
 import { Viewport } from "pixi-viewport";
 
 const CONFIG = {
@@ -18,10 +19,23 @@ const FILES = {
   },
 };
 
+const SOUNDS = {
+  fire: sound.Sound.from({
+    url: "/sounds/344276__nsstudios__laser3.mp3",
+    preload: true,
+  }),
+};
+
 const TEXT_STYLES = {
   hpBar: new PIXI.TextStyle({
     fontSize: 12,
   }),
+};
+
+export const processEffect = (effect) => {
+  if (effect.type == "fire") {
+    SOUNDS.fire.play();
+  }
 };
 
 const addStatsText = (app) => {

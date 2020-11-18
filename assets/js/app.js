@@ -16,7 +16,7 @@ import "phoenix_html";
 
 import socket from "./socket";
 import { consoleAppend, statusSet, readGameIdFromURL } from "./util";
-import { init as initGame } from "./game";
+import { init as initGame, processEffect } from "./game";
 import { init as initInput } from "./input";
 import { generateToken } from "./crypto";
 
@@ -25,6 +25,12 @@ const gameId = readGameIdFromURL();
 
 const playerToken = generateToken();
 document.playerToken = playerToken;
+
+const processEffects = (effects) => {
+  effects.forEach((effect) => {
+    processEffect(effect);
+  });
+};
 
 if (gameEl != null && gameId != null) {
   console.log("Initializing game connection...");
@@ -53,6 +59,7 @@ if (gameEl != null && gameId != null) {
 
   // Setup state sync
   channel.on("tick", (state) => {
+    processEffects(state.effect_events);
     document.state = state;
   });
 }

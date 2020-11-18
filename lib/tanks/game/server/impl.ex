@@ -106,12 +106,16 @@ defmodule Tanks.Game.Server.Impl do
       end)
       |> Map.new()
 
+    effect_events =
+      ECS.Queue.pop_all(game_id, :output) |> Enum.reverse() |> Enum.map(&Map.get(&1, :data))
+
     %{
       game_id: game_id,
       players: players,
       projectiles: projectiles,
       walls: walls,
-      zombies: zombies
+      zombies: zombies,
+      effect_events: effect_events
     }
   end
 
