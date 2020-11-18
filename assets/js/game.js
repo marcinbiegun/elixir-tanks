@@ -20,8 +20,14 @@ const FILES = {
 };
 
 const SOUNDS = {
+  // https://freesound.org/people/nsstudios/sounds/344276/
   fire: sound.Sound.from({
     url: "/sounds/344276__nsstudios__laser3.mp3",
+    preload: true,
+  }),
+  // https://freesound.org/people/mwl500/sounds/54807/
+  kick: sound.Sound.from({
+    url: "/sounds/54807__mwl500__good-kick-in-the-head-sound.mp3",
     preload: true,
   }),
 };
@@ -33,8 +39,15 @@ const TEXT_STYLES = {
 };
 
 export const processEffect = (effect) => {
-  if (effect.type == "fire") {
-    SOUNDS.fire.play();
+  switch (effect.type) {
+    case "fire":
+      SOUNDS.fire.play();
+      break;
+    case "hit":
+      SOUNDS.kick.play();
+      break;
+    default:
+      console.log("Uknown effect", effect);
   }
 };
 

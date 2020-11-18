@@ -162,7 +162,7 @@ defmodule Tanks.Game.Server do
       Tanks.Game.Event.Effect.new(
         Tanks.Game.Entity.Player,
         player_id,
-        %{x: player_x, y: player_y, type: "fire"}
+        %{type: "fire"}
       )
 
     ECS.Queue.put(game_id, :output, effect_event)

@@ -54,6 +54,17 @@ defmodule Tanks.Game.EventProcessor do
 
       entity ->
         Tanks.GameECS.remove_entity(entity, game_id)
+
+        if entity_module == Tanks.Game.Entity.Projectile do
+          effect_event =
+            Tanks.Game.Event.Effect.new(
+              Tanks.Game.Entity.Projectile,
+              entity.id,
+              %{type: "hit"}
+            )
+
+          ECS.Queue.put(game_id, :output, effect_event)
+        end
     end
   end
 
