@@ -38,8 +38,9 @@ defmodule Tanks.Game.Content.Map do
 
     meta =
       meta
-      |> insert_meta_tile(44, 44, :map_exit)
-      |> insert_meta_tile(10, 3, :map_exit)
+      |> insert_meta_tile(44, 44, :exit)
+      |> insert_meta_tile(10, 3, :exit)
+      |> insert_meta_tile(2, 2, :entry)
 
     tiles =
       Tiles.new(@width, @height, :empty)
@@ -73,7 +74,11 @@ defmodule Tanks.Game.Content.Map do
     meta_tiles |> Enum.map(&create_meta_entity/1)
   end
 
-  defp create_meta_entity({x, y, :map_exit}) do
+  defp create_meta_entity({x, y, :exit}) do
     Tanks.Game.Entity.Exit.new(x, y)
+  end
+
+  defp create_meta_entity({x, y, :entry}) do
+    Tanks.Game.Entity.Entry.new(x, y)
   end
 end

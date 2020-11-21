@@ -122,6 +122,22 @@ defmodule Tanks.Game.Server.Impl do
       end)
       |> Map.new()
 
+    entries =
+      ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Entry)
+      |> Enum.map(fn entity ->
+        %{x: position_x, y: position_y} = entity.components.position.state
+        %{shape: shape} = entity.components.size.state
+
+        data = %{
+          x: position_x,
+          y: position_y,
+          shape: shape |> Tuple.to_list()
+        }
+
+        {entity.id, data}
+      end)
+      |> Map.new()
+
     effect_events =
       ECS.Queue.pop_all(game_id, :output) |> Enum.reverse() |> Enum.map(&Map.get(&1, :data))
 
@@ -132,8 +148,18 @@ defmodule Tanks.Game.Server.Impl do
       walls: walls,
       zombies: zombies,
       exits: exits,
+      entries: entries,
       effect_events: effect_events
     }
+  end
+
+  def remove_all_nonplayer_entities(game_id) do
+    ECS.Registry.Entity.all(game_id)
+    |> Enum.map(fn entity ->
+      if entity.__struct__ != Tanks.Game.Entity.Player do
+        Tanks.GameECS.remove_entity(entity, game_id)
+      end
+    end)
   end
 
   defp do_tick(game_id, tick) do

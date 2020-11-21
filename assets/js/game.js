@@ -14,6 +14,7 @@ const FILES = {
   wall: "/images/wall_16.png",
   zombie: "/images/zombie1_hold.png",
   exit: "/images/star.png",
+  entry: "/images/coinSilver.png",
   tiles: {
     empty: "/images/tiles/empty.png",
     wall: "/images/tiles/wall.png",
@@ -248,6 +249,7 @@ export const init = (gameEl) => {
     players: {},
     zombies: {},
     exits: {},
+    entries: {},
   };
 
   // Add camera target
@@ -297,6 +299,12 @@ export const init = (gameEl) => {
       db.exits,
       document.state.exits,
       FILES.exit
+    );
+    db.entries = updateSprites(
+      viewport,
+      db.entries,
+      document.state.entries,
+      FILES.entry
     );
 
     statsText.text =
