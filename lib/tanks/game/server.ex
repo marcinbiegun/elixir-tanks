@@ -55,6 +55,18 @@ defmodule Tanks.Game.Server do
     GenServer.stop(name(game_id))
   end
 
+  def next_map(game_id) do
+    GenServer.cast(name(game_id), :next_map)
+  end
+
+  def restart_map(game_id) do
+    GenServer.cast(name(game_id), :restart_map)
+  end
+
+  def restart_game(game_id) do
+    GenServer.cast(name(game_id), :restart_game)
+  end
+
   def crash(game_id) do
     GenServer.cast(name(game_id), :raise)
   end
@@ -76,6 +88,7 @@ defmodule Tanks.Game.Server do
   def init({game_id, level, opts}) do
     Logger.info("Starting game server #{__MODULE__} #{game_id} whith ipts #{inspect(opts)}")
 
+    # Start dependent processes
     Tanks.GameECS.start(game_id)
 
     if Keyword.get(opts, :no_tick) != true do
@@ -167,6 +180,39 @@ defmodule Tanks.Game.Server do
 
     ECS.Queue.put(game_id, :output, effect_event)
 
+    {:noreply, state}
+  end
+
+  def handle_cast(:next_map, %{game_id: _game_id} = state) do
+    {:noreply, state}
+  end
+
+  def handle_cast(:restart_map, %{game_id: game_id} = state) do
+    # Remove current map
+    Impl.remove_all_nonplayer_entities(game_id)
+
+    # Add new map
+    Tanks.Game.Content.Map.generate_entities()
+    |> Enum.map(&Tanks.GameECS.add_entity(&1, game_id))
+
+    # Move players to spawn point
+    entry =
+      ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Entry)
+      |> Enum.at(0)
+
+    %{x: entry_x, y: entry_y} = entry.components.position.state
+
+    ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Player)
+    |> Enum.each(fn player ->
+      position = player.components.position
+      new_position = %{position.state | x: entry_x, y: entry_y}
+      ECS.Component.update(position.pid, new_position)
+    end)
+
+    {:noreply, state}
+  end
+
+  def handle_cast(:restart_game, %{game_id: _game_id} = state) do
     {:noreply, state}
   end
 

@@ -27,4 +27,16 @@ defmodule Tanks.GameServer do
   def join_player(game_id, token) do
     Tanks.Game.Server.join_player(game_id, token)
   end
+
+  def next_map(game_id) do
+    Tanks.Game.Server.next_map(game_id)
+  end
+
+  def restart_map(game_id) do
+    Tanks.Game.Server.restart_map(game_id)
+  end
+
+  def restart_game(game_id) do
+    Tanks.Game.Server.restart_game(game_id)
+  end
 end

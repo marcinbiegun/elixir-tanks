@@ -1,5 +1,6 @@
 defmodule TanksWeb.GameChannel do
   use TanksWeb, :channel
+  require Logger
 
   def join("game:" <> game_id, %{"playerToken" => player_token} = _params, socket) do
     # Assign data to channel
@@ -37,6 +38,32 @@ defmodule TanksWeb.GameChannel do
     %{game_id: game_id, player_id: player_id} = socket.assigns.current_server
     input = %{left: left, right: right, up: up, down: down}
     Tanks.Game.Server.send_input(game_id, player_id, input)
+
+    {:noreply, socket}
+  end
+
+  def handle_in(
+        "admin_input",
+        %{"type" => type} = data,
+        socket
+      ) do
+    %{game_id: game_id} = socket.assigns.current_server
+
+    Logger.debug("Handling admin_input: #{type}")
+
+    case type do
+      "next_map" ->
+        Tanks.GameServer.next_map(game_id)
+
+      "restart_map" ->
+        Tanks.GameServer.restart_map(game_id)
+
+      "restart_game" ->
+        Tanks.GameServer.restart_game(game_id)
+
+      _other ->
+        Logger.warn("Unknown admin_input: #{inspect(data)})")
+    end
 
     {:noreply, socket}
   end

@@ -18,6 +18,7 @@ import socket from "./socket";
 import { consoleAppend, statusSet, readGameIdFromURL } from "./util";
 import { init as initGame, processEffect } from "./game";
 import { init as initInput } from "./input";
+import { sendDebugAction } from "./admin_input";
 import { generateToken } from "./crypto";
 
 const gameEl = document.getElementById("game");
@@ -62,4 +63,15 @@ if (gameEl != null && gameId != null) {
     processEffects(state.effect_events);
     document.state = state;
   });
+
+  // Attach debug buttons
+  document.getElementById("debug-next-map").onclick = () => {
+    sendDebugAction("next_map");
+  };
+  document.getElementById("debug-restart-map").onclick = () => {
+    sendDebugAction("restart_map");
+  };
+  document.getElementById("debug-restart-game").onclick = () => {
+    sendDebugAction("restart_game");
+  };
 }

@@ -4,5 +4,11 @@
     <ul id="status"></ul>
     <div id="game"></div>
     <ul id="console"></ul>
+
+    <div id="debug">
+      <button id="debug-next-map" class="button button-outline">Next map</button>
+      <button id="debug-restart-map" class="button button-outline">Restart map</button>
+      <button id="debug-restart-game" class="button button-outline">Restart game</button>
+    </div>
   </div>
 </section>
