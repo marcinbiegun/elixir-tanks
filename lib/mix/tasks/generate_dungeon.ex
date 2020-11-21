@@ -11,8 +11,8 @@ defmodule Mix.Tasks.GenerateDungeon do
 
   @impl Mix.Task
   def run([]) do
-    Tanks.Game.Content.Map.generate_tiles()
-    |> display_tiles()
+    {tiles, _meta} = Tanks.Game.Content.Map.generate_tiles()
+    display_tiles(tiles)
   end
 
   defp display_tiles(tiles) do

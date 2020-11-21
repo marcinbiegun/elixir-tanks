@@ -106,6 +106,22 @@ defmodule Tanks.Game.Server.Impl do
       end)
       |> Map.new()
 
+    exits =
+      ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Exit)
+      |> Enum.map(fn entity ->
+        %{x: position_x, y: position_y} = entity.components.position.state
+        %{shape: shape} = entity.components.size.state
+
+        data = %{
+          x: position_x,
+          y: position_y,
+          shape: shape |> Tuple.to_list()
+        }
+
+        {entity.id, data}
+      end)
+      |> Map.new()
+
     effect_events =
       ECS.Queue.pop_all(game_id, :output) |> Enum.reverse() |> Enum.map(&Map.get(&1, :data))
 
@@ -115,6 +131,7 @@ defmodule Tanks.Game.Server.Impl do
       projectiles: projectiles,
       walls: walls,
       zombies: zombies,
+      exits: exits,
       effect_events: effect_events
     }
   end

@@ -1,10 +1,14 @@
 defmodule Tanks.Game.Content.Map do
   alias Utils.Tiles
+  alias Tanks.Game.Content.Config
 
   @width 50
   @height 50
 
   def generate_entities() do
+    {tiles, meta_tiles} = generate_tiles()
+    boards = [Tanks.Game.Entity.Board.new(tiles)]
+
     walls1 =
       Enum.map(1..8, fn i ->
         Tanks.Game.Entity.Wall.new(150, 100 + i * 50)
@@ -23,14 +27,20 @@ defmodule Tanks.Game.Content.Map do
       Tanks.Game.Entity.Zombie.new(250, 290)
     ]
 
-    tiles = generate_tiles()
-    boards = [Tanks.Game.Entity.Board.new(tiles)]
+    meta_entities = create_meta_entities(meta_tiles)
 
-    walls1 ++ walls2 ++ zombies ++ boards
+    walls1 ++ walls2 ++ zombies ++ boards ++ meta_entities
   end
 
   # Used in mix task
   def generate_tiles do
+    meta = []
+
+    meta =
+      meta
+      |> insert_meta_tile(44, 44, :map_exit)
+      |> insert_meta_tile(10, 3, :map_exit)
+
     tiles =
       Tiles.new(@width, @height, :empty)
       # Top safe house
@@ -52,6 +62,18 @@ defmodule Tanks.Game.Content.Map do
       # Outer border
       |> Tiles.border(0, 0, @width, @height, :wall)
 
-    tiles
+    {tiles, meta}
+  end
+
+  defp insert_meta_tile(list, x, y, type) do
+    [{x * Config.tile_size(), y * Config.tile_size(), type} | list]
+  end
+
+  defp create_meta_entities(meta_tiles) do
+    meta_tiles |> Enum.map(&create_meta_entity/1)
+  end
+
+  defp create_meta_entity({x, y, :map_exit}) do
+    Tanks.Game.Entity.Exit.new(x, y)
   end
 end
