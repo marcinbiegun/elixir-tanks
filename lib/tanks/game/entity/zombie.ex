@@ -24,7 +24,7 @@ defmodule Tanks.Game.Entity.Zombie do
   @speed 1
   @size 20.0
   @shape :rectangle
-  @meele_attack_range 20.0
+  @meele_attack_range 50.0
   @meele_attack_reload 1000
   @sight_range 400.0
 

@@ -55,6 +55,7 @@ defmodule Tanks.Game.EventProcessor do
       entity ->
         Tanks.GameECS.remove_entity(entity, game_id)
 
+        # Projectile destroyed effect
         if entity_module == Tanks.Game.Entity.Projectile do
           effect_event =
             Tanks.Game.Event.Effect.new(
