@@ -30,6 +30,11 @@ const SOUNDS = {
     url: "/sounds/54807__mwl500__good-kick-in-the-head-sound.mp3",
     preload: true,
   }),
+  // https://freesound.org/people/MisterKidX/sounds/454840/
+  zombie_growl: sound.Sound.from({
+    url: "/sounds/454840__misterkidx__zombie-thrown.mp3",
+    preload: true,
+  }),
 };
 
 const TEXT_STYLES = {
@@ -45,6 +50,9 @@ export const processEffect = (effect) => {
       break;
     case "hit":
       SOUNDS.kick.play();
+      break;
+    case "zombie_attack":
+      SOUNDS.zombie_growl.play();
       break;
     default:
       console.log("Uknown effect", effect);

@@ -41,6 +41,7 @@ defmodule Tanks.Game.System.AI do
       new_attack_state = attack_state |> Map.merge(%{next_attack_at: now + attack_state.reload})
       ECS.Component.update(attack_pid, new_attack_state)
 
+      # Hit event - will take HP
       hit_event =
         Tanks.Game.Event.Hit.new(
           Tanks.Game.Entity.Player,
@@ -48,6 +49,16 @@ defmodule Tanks.Game.System.AI do
         )
 
       ECS.Queue.put(game_id, :internal, hit_event)
+
+      # Play sound effect
+      effect_event =
+        Tanks.Game.Event.Effect.new(
+          Tanks.Game.Entity.Player,
+          nearest_player.id,
+          %{type: "zombie_attack"}
+        )
+
+      ECS.Queue.put(game_id, :output, effect_event)
     end
 
     # Update brain.last_decision_at
