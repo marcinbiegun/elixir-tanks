@@ -21,6 +21,7 @@ defmodule Tanks.Game.Entity.Player do
   @speed 5.0
   @shape :rectangle
   @size 20.0
+  @blocking true
   @hp 10
 
   def new(), do: new(0, 0)
@@ -35,7 +36,7 @@ defmodule Tanks.Game.Entity.Player do
         speed: @speed
       })
 
-    size = Size.new(%{shape: {@shape, @size}})
+    size = Size.new(%{shape: {@shape, @size}, blocking: @blocking})
     position = Position.new(%{x: x, y: y})
     health = Health.new(@hp)
 

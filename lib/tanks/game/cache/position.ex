@@ -23,34 +23,45 @@ defmodule Tanks.Game.Cache.Position do
         check_x,
         check_y,
         check_shape,
-        entity_id_filter \\ -1,
-        entity_type_filter \\ nil
+        opts \\ []
       ) do
+    filter_id_not = Keyword.get(opts, :id_not, nil)
+    filter_type = Keyword.get(opts, :type, nil)
+    filter_blocking = Keyword.get(opts, :blocking, nil)
+
     ECS.Cache.get(game_id, __MODULE__)
-    |> Enum.filter(fn {_x, _y, _shape, _entity_type, entity_id} ->
-      entity_id != entity_id_filter
+    # Filters
+    |> Enum.filter(fn {_x, _y, _shape, _blocking, _entity_type, entity_id} ->
+      filter_id_not == nil or entity_id != filter_id_not
     end)
-    |> Enum.filter(fn {_x, _y, _shape, entity_type, _entity_id} ->
-      entity_type_filter == nil or entity_type_filter == entity_type
+    |> Enum.filter(fn {_x, _y, _shape, _blocking, entity_type, _entity_id} ->
+      filter_type == nil or filter_type == entity_type
     end)
-    |> Enum.map(fn {x, y, shape, entity_type, entity_id} ->
-      {x, y, shape, entity_type, entity_id, Utils.Math.distance(x, y, check_x, check_y)}
+    |> Enum.filter(fn {_x, _y, _shape, blocking, _entity_type, _entity_id} ->
+      filter_blocking == nil or filter_blocking == blocking
     end)
-    |> Enum.sort_by(fn {_x, _y, _shape, _entity_type, _entity_id, distance} ->
-      distance
-    end)
-    |> Enum.filter(fn {x, y, shape, _entity_type, _entity_id, _distance} ->
+    # Find collisions
+    |> Enum.filter(fn {x, y, shape, _blocking, _entity_type, _entity_id} ->
       Utils.Math.collision?(x, y, shape, check_x, check_y, check_shape)
     end)
-    |> Enum.map(fn {_x, _y, _shape, entity_type, entity_id, _distance} ->
+    # Add distance
+    |> Enum.map(fn {x, y, shape, blocking, entity_type, entity_id} ->
+      {x, y, shape, blocking, entity_type, entity_id, Utils.Math.distance(x, y, check_x, check_y)}
+    end)
+    # Sort by distance
+    |> Enum.sort_by(fn {_x, _y, _shape, _blocking, _entity_type, _entity_id, distance} ->
+      distance
+    end)
+    # Format result
+    |> Enum.map(fn {_x, _y, _shape, _blocking, entity_type, entity_id, _distance} ->
       {entity_type, entity_id}
     end)
   end
 
   defp put_entity(game_id, {entity_type, entity_id, {position_pid, size_pid}}) do
     %{x: x, y: y} = ECS.Component.get_state(position_pid)
-    %{shape: shape} = ECS.Component.get_state(size_pid)
-    elem = {x, y, shape, entity_type, entity_id}
+    %{shape: shape, blocking: blocking} = ECS.Component.get_state(size_pid)
+    elem = {x, y, shape, blocking, entity_type, entity_id}
 
     ECS.Cache.update(game_id, __MODULE__, fn state ->
       [elem | state]

@@ -24,6 +24,7 @@ defmodule Tanks.Game.Entity.Zombie do
   @speed 1
   @size 20.0
   @shape :rectangle
+  @blocking true
   @meele_attack_range 50.0
   @meele_attack_reload 1000
   @sight_range 400.0
@@ -46,8 +47,7 @@ defmodule Tanks.Game.Entity.Zombie do
         speed: @speed
       })
 
-    shape = {@shape, @size}
-    size = Size.new(%{shape: shape})
+    size = Size.new(%{shape: {@shape, @size}, blocking: @blocking})
     position = Position.new(%{x: x, y: y})
 
     components = %{

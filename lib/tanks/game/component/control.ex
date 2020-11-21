@@ -12,7 +12,6 @@ defmodule Tanks.Game.Components.Control do
 
   use ECS.Component
 
-  # defstruct [:down, :left, :right, :up, :speed]
   defstruct [:pid, :state]
 
   def new(%{down: _down, left: _left, right: _right, up: _up, speed: _speed} = state) do

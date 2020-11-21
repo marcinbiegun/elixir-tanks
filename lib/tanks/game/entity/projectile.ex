@@ -19,12 +19,13 @@ defmodule Tanks.Game.Entity.Projectile do
   defstruct [:id, :components]
 
   @size 10.0
+  @blocking false
 
   def new(x, y, vel_x, vel_y, lifetime \\ 10_000) do
     lifetime = Tanks.Game.Components.Lifetime.new(lifetime)
     position = Tanks.Game.Components.Position.new(%{x: x, y: y})
     shape = {:circle, @size}
-    size = Tanks.Game.Components.Size.new(%{shape: shape})
+    size = Tanks.Game.Components.Size.new(%{shape: shape, blocking: @blocking})
     velocity = Tanks.Game.Components.Velocity.new(%{x: vel_x, y: vel_y})
 
     components = %{

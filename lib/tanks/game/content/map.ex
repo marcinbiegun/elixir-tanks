@@ -5,7 +5,7 @@ defmodule Tanks.Game.Content.Map do
   @width 50
   @height 50
 
-  def generate_entities() do
+  def generate_entities(_level \\ 1) do
     {tiles, meta_tiles} = generate_tiles()
     boards = [Tanks.Game.Entity.Board.new(tiles)]
 

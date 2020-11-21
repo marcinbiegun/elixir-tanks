@@ -4,7 +4,8 @@ defmodule Tanks.Game.Components.Size do
   @type t :: %__MODULE__{
           pid: pid(),
           state: %{
-            shape: shape()
+            shape: shape(),
+            blocking: boolean()
           }
         }
 
@@ -12,7 +13,7 @@ defmodule Tanks.Game.Components.Size do
 
   defstruct [:pid, :state]
 
-  def new(%{shape: _shape} = state) do
+  def new(%{shape: _shape, blocking: _blocking} = state) do
     ECS.Component.new(__MODULE__, state)
   end
 end

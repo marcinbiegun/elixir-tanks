@@ -68,7 +68,8 @@ defmodule Tanks.Game.System.Movement do
         new_position.x,
         new_position.y,
         shape,
-        entity_id
+        id_not: entity_id,
+        blocking: true
       ) != [] ->
         old_position
 

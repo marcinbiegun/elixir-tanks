@@ -1,4 +1,4 @@
-defmodule Tanks.Game.Entity.Exit do
+defmodule Tanks.Game.Entity.Entry do
   alias Tanks.Game.Components.{
     Position,
     Size
