@@ -202,15 +202,8 @@ defmodule Tanks.Game.Server do
 
     %{x: entry_x, y: entry_y} = entry.components.position.state
 
-    # TODO: players will block each other, a function like find_closest_fitting_location
-    # needs to be added.
-
-    ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Player)
-    |> Enum.each(fn player ->
-      position = player.components.position
-      new_position = %{position.state | x: entry_x, y: entry_y}
-      ECS.Component.update(position.pid, new_position)
-    end)
+    players = ECS.Registry.Entity.all(game_id, Tanks.Game.Entity.Player)
+    Tanks.Game.Operations.move_to_nonblocking(game_id, entry_x, entry_y, players)
 
     {:noreply, state}
   end

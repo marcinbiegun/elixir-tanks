@@ -15,7 +15,48 @@ defmodule Tanks.Game.Cache.Position do
     ECS.Cache.clear(game_id, __MODULE__)
 
     component_tuples(game_id)
-    |> Enum.map(&put_entity(game_id, &1))
+    |> Enum.map(&add_component_tuple(game_id, &1))
+  end
+
+  def update(game_id, entity) do
+    update_entity(game_id, entity)
+  end
+
+  @possible_places [
+    {1, 0},
+    {1, 1},
+    {0, 1},
+    {1, 1},
+    {-1, 0},
+    {-1, -1},
+    {0, -1},
+    {1, -1}
+  ]
+
+  def closest_empty_place(game_id, x, y, {_shape_type, shape_size} = shape) do
+    if colliding_entities(game_id, x, y, shape, blocking: true) |> Enum.empty?() do
+      {x, y}
+    else
+      found_place =
+        @possible_places
+        |> Enum.shuffle()
+        |> Enum.find(fn {x_shift, y_shift} ->
+          x_shifted = x + x_shift * shape_size
+          y_shifted = y + y_shift * shape_size
+
+          colliding_entities(game_id, x_shifted, y_shifted, shape, blocking: true)
+          |> Enum.empty?()
+        end)
+
+      if found_place do
+        {x_shift, y_shift} = found_place
+        x_shifted = x + x_shift * shape_size
+        y_shifted = y + y_shift * shape_size
+        {:ok, {x_shifted, y_shifted}}
+      else
+        {:error, "Can't place"}
+      end
+    end
   end
 
   def colliding_entities(
@@ -58,14 +99,39 @@ defmodule Tanks.Game.Cache.Position do
     end)
   end
 
-  defp put_entity(game_id, {entity_type, entity_id, {position_pid, size_pid}}) do
-    %{x: x, y: y} = ECS.Component.get_state(position_pid)
-    %{shape: shape, blocking: blocking} = ECS.Component.get_state(size_pid)
-    elem = {x, y, shape, blocking, entity_type, entity_id}
+  defp update_entity(
+         game_id,
+         %{
+           __struct__: entity_type,
+           id: entity_id,
+           components: %{position: %{pid: position_pid}, size: %{pid: size_pid}}
+         } = _entity
+       ) do
+    elem = build_cached_entity(entity_type, entity_id, position_pid, size_pid)
+
+    ECS.Cache.update(game_id, __MODULE__, fn state ->
+      filtered_state =
+        state
+        |> Enum.filter(fn {_x, _y, _shape, _blocking, _entity_type, state_entity_id} ->
+          state_entity_id != entity_id
+        end)
+
+      [elem | filtered_state]
+    end)
+  end
+
+  defp add_component_tuple(game_id, {entity_type, entity_id, {position_pid, size_pid}}) do
+    elem = build_cached_entity(entity_type, entity_id, position_pid, size_pid)
 
     ECS.Cache.update(game_id, __MODULE__, fn state ->
       [elem | state]
     end)
+  end
+
+  defp build_cached_entity(entity_type, entity_id, position_pid, size_pid) do
+    %{x: x, y: y} = ECS.Component.get_state(position_pid)
+    %{shape: shape, blocking: blocking} = ECS.Component.get_state(size_pid)
+    {x, y, shape, blocking, entity_type, entity_id}
   end
 
   defp component_tuples(game_id) do
