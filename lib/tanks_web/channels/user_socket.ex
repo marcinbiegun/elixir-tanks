@@ -17,6 +17,7 @@ defmodule TanksWeb.UserSocket do
   # performing token verification on connect.
   @impl true
   def connect(_params, socket, _connect_info) do
+    # TODO: set user id
     new_user = %{id: 0}
     {:ok, assign(socket, :current_user, new_user)}
   end
@@ -32,5 +33,5 @@ defmodule TanksWeb.UserSocket do
   #
   # Returning `nil` makes this socket anonymous.
   @impl true
-  def id(_socket), do: nil
+  def id(socket), do: "users_socket:#{socket.assigns.current_user.id}"
 end
