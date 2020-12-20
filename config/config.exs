@@ -8,9 +8,7 @@
 use Mix.Config
 
 config :tanks,
-  # TODO: Make it not require psql database to run
-  # ecto_repos: [Tanks.Repo]
-  ecto_repos: []
+  ecto_repos: [Tanks.Repo]
 
 # Configures the endpoint
 config :tanks, TanksWeb.Endpoint,
