@@ -43,12 +43,21 @@ defmodule Utils.Tiles do
   end
 
   def put(tiles, x, y, val) do
-    {max_x, max_y} = max_coords(tiles)
-
-    if x > max_x or y > max_y do
+    if x < 0 or y < 0 or x > max_x(tiles) or y > max_y(tiles) do
       val
     else
       List.replace_at(tiles, x, List.replace_at(Enum.at(tiles, x), y, val))
+    end
+  end
+
+  def safe_get(tiles, {x, y}, default \\ nil) do
+    max_x = (tiles |> length()) - 1
+    max_y = (tiles |> Enum.at(0) |> length()) - 1
+
+    if x < 0 or y < 0 or x > max_x or y > max_y do
+      default
+    else
+      get(tiles, x, y)
     end
   end
 
@@ -61,4 +70,17 @@ defmodule Utils.Tiles do
     max_y = (tiles |> Enum.at(0) |> length()) - 1
     {max_x, max_y}
   end
+
+  # TODO: optimize
+  def find(tiles, value) do
+    all_coords =
+      Enum.flat_map(0..max_x(tiles), fn x ->
+        Enum.map(0..max_y(tiles), fn y -> {x, y} end)
+      end)
+
+    Enum.find(all_coords, fn coord -> safe_get(tiles, coord) == value end)
+  end
+
+  def max_x(tiles), do: (tiles |> length()) - 1
+  def max_y(tiles), do: (tiles |> Enum.at(0) |> length()) - 1
 end

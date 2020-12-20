@@ -4,14 +4,10 @@ defmodule Mix.Tasks.GenerateDungeon do
   alias Tanks.Game.Content
   alias Utils.Tiles
 
-  # def run([source_slug]) do
-  #   Mix.Task.run("app.start")
-  #   Scrap.Crawl.Worker.RefreshOffers.run(source_slug)
-  # end
-
   @impl Mix.Task
   def run([]) do
-    {tiles, _meta} = Tanks.Game.Content.Map.generate_tiles()
+    # {tiles, _meta} = Tanks.Game.Content.Map.generate_tiles()
+    {tiles, _meta} = Tanks.Game.Content.Map2.generate_tiles()
     display_tiles(tiles)
   end
 
