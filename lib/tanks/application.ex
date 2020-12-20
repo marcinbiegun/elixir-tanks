@@ -7,7 +7,8 @@ defmodule Tanks.Application do
 
   def start(_type, _args) do
     children = [
-      ## Phoenix processes
+      # Phoenix processes
+      #
       # Start the Ecto repository
       Tanks.Repo,
       # Start the Telemetry supervisor
@@ -17,8 +18,10 @@ defmodule Tanks.Application do
       # Start the Endpoint (http/https)
       TanksWeb.Endpoint,
       #
-      ## Our processes
-      %{id: ECS.Registry.Id, start: {ECS.Registry.Id, :start, []}},
+      # Our processes
+      #
+      # Watcher for GameChannel
+      %{id: Tanks.ChannelWatcher, start: {Tanks.ChannelWatcher, :start_link, [:game]}},
       {Tanks.Game.ServerSupervisor, []},
       {Registry, [keys: :unique, name: Registry.Tanks.Game.Server]},
       {Registry, [keys: :unique, name: Registry.ECS.Registry.Component]},

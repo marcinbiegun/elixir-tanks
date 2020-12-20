@@ -3,14 +3,20 @@ defmodule TanksWeb.GameChannel do
   require Logger
 
   def join("game:" <> game_id, %{"playerToken" => player_token} = _params, socket) do
-    # Assign data to channel
-
     # Join game server
     {response, socket} =
       with {:ok, server} <- Tanks.GameServer.get(game_id),
-           {:ok, player} <- Tanks.GameServer.join_player(game_id, player_token),
+           {:ok, player} <- Tanks.GameServer.add_player(game_id, player_token),
            {:ok, init_state} <- Tanks.GameServer.init_state(game_id) do
+        # Assign data to channel
         socket = assign(socket, :current_server, %{game_id: server.game_id, player_id: player.id})
+
+        :ok =
+          Tanks.ChannelWatcher.monitor(
+            :game,
+            self(),
+            {__MODULE__, :leave, [game_id, player.id, player_token]}
+          )
 
         response = %{
           game_id: server.game_id,
@@ -28,6 +34,13 @@ defmodule TanksWeb.GameChannel do
 
     # Respond
     {:ok, response, socket}
+  end
+
+  def leave(game_id, player_id, _player_token) do
+    with {:ok, _server} <- Tanks.GameServer.get(game_id) do
+      # {:ok, _player} <- Tanks.GameServer.get_player(game_id, player_id) do
+      Tanks.GameServer.remove_player(game_id, player_id)
+    end
   end
 
   def handle_in(

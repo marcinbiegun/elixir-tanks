@@ -24,8 +24,12 @@ defmodule Tanks.GameServer do
     Tanks.Game.Server.stop(game_id)
   end
 
-  def join_player(game_id, token) do
-    Tanks.Game.Server.join_player(game_id, token)
+  def add_player(game_id, player_token) do
+    Tanks.Game.Server.add_player(game_id, player_token)
+  end
+
+  def remove_player(game_id, player_token) do
+    Tanks.Game.Server.remove_player(game_id, player_token)
   end
 
   def next_map(game_id) do

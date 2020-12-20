@@ -79,8 +79,12 @@ defmodule Tanks.Game.Server do
     GenServer.cast(name(game_id), {:action, player_id, :fire, {x, y}})
   end
 
-  def join_player(game_id, token) do
-    GenServer.call(name(game_id), {:join_player, token})
+  def add_player(game_id, token) do
+    GenServer.call(name(game_id), {:add_player, token})
+  end
+
+  def remove_player(game_id, token) do
+    GenServer.call(name(game_id), {:remove_player, token})
   end
 
   # Callbacks
@@ -138,7 +142,7 @@ defmodule Tanks.Game.Server do
     {:reply, {:ok, summary}, state}
   end
 
-  def handle_call({:join_player, player_token}, _from, %{game_id: game_id} = state) do
+  def handle_call({:add_player, player_token}, _from, %{game_id: game_id} = state) do
     player =
       Tanks.Game.Entity.Player.new(40, 40)
       |> Tanks.GameECS.add_entity(game_id)
@@ -146,6 +150,13 @@ defmodule Tanks.Game.Server do
     player = %{id: player.id, token: player_token}
 
     {:reply, {:ok, player}, state}
+  end
+
+  def handle_call({:remove_player, player_id}, _from, %{game_id: game_id} = state) do
+    event = Tanks.Game.Event.Destroy.new(Tanks.Game.Entity.Player, player_id)
+    ECS.Queue.put(game_id, :internal, event)
+
+    {:reply, :ok, state}
   end
 
   def handle_cast({:update_input, player_id, input}, %{game_id: game_id} = state) do
