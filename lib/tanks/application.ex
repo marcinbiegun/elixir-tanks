@@ -21,8 +21,9 @@ defmodule Tanks.Application do
       # Our processes
       #
       # Watcher for GameChannel
-      %{id: Tanks.ChannelWatcher, start: {Tanks.ChannelWatcher, :start_link, [:game]}},
       {Tanks.Game.ServerSupervisor, []},
+      %{id: Tanks.ChannelWatcher, start: {Tanks.ChannelWatcher, :start_link, [:game]}},
+      %{id: ECS.Registry.Id, start: {ECS.Registry.Id, :start, []}},
       {Registry, [keys: :unique, name: Registry.Tanks.Game.Server]},
       {Registry, [keys: :unique, name: Registry.ECS.Registry.Component]},
       {Registry, [keys: :unique, name: Registry.ECS.Registry.ComponentTuple]},
